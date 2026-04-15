@@ -9,79 +9,64 @@
 <body>
 <div id="app">
 
-  <!-- ── Customization Screen ── -->
   <div id="customize-screen" class="screen">
-
     <div class="customize-header">
       <span class="game-title">✦ 캐릭터 만들기</span>
     </div>
-
     <div class="customize-layout">
 
-      <!-- Left: Face Preview -->
+      <!-- 왼쪽: 미리보기 -->
       <div class="preview-panel">
         <div class="preview-bg">
-          <canvas id="preview-canvas" width="240" height="270"></canvas>
+          <canvas id="preview-canvas" width="300" height="300"></canvas>
         </div>
-        <!-- Skin color row -->
         <div class="skin-row" style="margin-top:10px;">
-          <span class="skin-label" style="font-size:12px;color:#999;margin-right:4px;">피부</span>
+          <span style="font-size:12px;color:#999;margin-right:6px;">피부</span>
         </div>
       </div>
 
-      <!-- Right: Options -->
+      <!-- 오른쪽: 옵션 -->
       <div class="options-panel">
-
-        <!-- Category Tabs -->
         <div class="category-tabs">
           <button class="cat-tab active" data-cat="face">얼굴</button>
           <button class="cat-tab" data-cat="hair">머리스타일</button>
+          <button class="cat-tab" data-cat="clothing">의상</button>
           <button class="cat-tab" data-cat="personality">성격</button>
         </div>
 
-        <!-- Face Panel -->
+        <!-- 얼굴 -->
         <div id="panel-face" class="category-panel">
           <div class="sub-tabs">
             <button class="sub-tab active" data-sub="eyes">눈</button>
             <button class="sub-tab" data-sub="nose">코</button>
             <button class="sub-tab" data-sub="mouth">입</button>
           </div>
-
-          <div id="sub-eyes" class="sub-panel">
-            <div class="parts-grid" id="eyes-grid"></div>
-            <!-- Eye color appended by JS -->
-          </div>
-          <div id="sub-nose" class="sub-panel hidden">
-            <div class="parts-grid" id="nose-grid"></div>
-          </div>
-          <div id="sub-mouth" class="sub-panel hidden">
-            <div class="parts-grid" id="mouth-grid"></div>
-          </div>
+          <div id="sub-eyes"  class="sub-panel"><div class="parts-grid" id="eyes-grid"></div></div>
+          <div id="sub-nose"  class="sub-panel hidden"><div class="parts-grid" id="nose-grid"></div></div>
+          <div id="sub-mouth" class="sub-panel hidden"><div class="parts-grid" id="mouth-grid"></div></div>
         </div>
 
-        <!-- Hair Panel -->
+        <!-- 머리 -->
         <div id="panel-hair" class="category-panel hidden">
           <div class="parts-grid" id="hair-grid"></div>
-          <!-- Hair color appended by JS -->
         </div>
 
-        <!-- Personality Panel -->
+        <!-- 의상 -->
+        <div id="panel-clothing" class="category-panel hidden"></div>
+
+        <!-- 성격 -->
         <div id="panel-personality" class="category-panel hidden">
           <div id="personality-questions"></div>
         </div>
+      </div>
+    </div>
 
-      </div><!-- /options-panel -->
-    </div><!-- /customize-layout -->
-
-    <!-- Bottom: Complete button -->
     <div class="bottom-bar">
       <button id="complete-btn" class="complete-btn" disabled>완성</button>
     </div>
+  </div>
 
-  </div><!-- /customize-screen -->
-
-
-  <!-- ── Result Screen ── -->
+  <!-- 결과 화면 -->
   <div id="result-screen" class="screen hidden">
     <div class="result-container">
       <h1 class="result-tada">완성!</h1>
@@ -96,8 +81,7 @@
     </div>
   </div>
 
-</div><!-- /app -->
-
+</div>
 <script src="js/parts.js"></script>
 <script src="js/customize.js"></script>
 </body>
