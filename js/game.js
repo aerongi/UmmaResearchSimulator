@@ -152,7 +152,7 @@ const headMat = new THREE.MeshBasicMaterial({
   side: THREE.FrontSide, depthWrite:false,
 });
 const headPlane = new THREE.Mesh(new THREE.PlaneGeometry(0.84, 0.84), headMat);
-headPlane.position.set(0, 1.60, 0.17);
+headPlane.position.set(0, 1.60, 0.04);
 charGroup.add(headPlane);
 
 /* ── 뒷면 Back Hair Plane (뒤쪽, FrontSide) ─────── */
@@ -161,7 +161,7 @@ const backHairMat = new THREE.MeshBasicMaterial({
   side: THREE.FrontSide, depthWrite:false,
 });
 const backHairPlane = new THREE.Mesh(new THREE.PlaneGeometry(0.90, 0.90), backHairMat);
-backHairPlane.position.set(0, 1.60, -0.17);
+backHairPlane.position.set(0, 1.60, -0.04);
 backHairPlane.rotation.y = Math.PI; // 뒤를 향함
 charGroup.add(backHairPlane);
 
@@ -330,7 +330,7 @@ canvas.addEventListener('mousedown',e=>{dragging=true;lastX=e.clientX;lastY=e.cl
 window.addEventListener('mousemove',e=>{
   if(!dragging) return;
   azimuth-=(e.clientX-lastX)*0.007; elevation+=(e.clientY-lastY)*0.005;
-  elevation=Math.max(-0.12,Math.min(0.68,elevation));
+  elevation=Math.max(-0.08,Math.min(0.38,elevation));
   lastX=e.clientX; lastY=e.clientY; updateCamera();
 });
 window.addEventListener('mouseup',()=>{dragging=false;canvas.style.cursor='grab';});
@@ -339,7 +339,7 @@ canvas.addEventListener('touchstart',e=>{dragging=true;lastX=e.touches[0].client
 canvas.addEventListener('touchmove',e=>{
   if(!dragging) return;
   azimuth-=(e.touches[0].clientX-lastX)*0.007; elevation+=(e.touches[0].clientY-lastY)*0.005;
-  elevation=Math.max(-0.12,Math.min(0.68,elevation));
+  elevation=Math.max(-0.08,Math.min(0.38,elevation));
   lastX=e.touches[0].clientX; lastY=e.touches[0].clientY; updateCamera();
 },{passive:true});
 canvas.addEventListener('touchend',()=>dragging=false);
