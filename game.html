@@ -5,23 +5,46 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>나의 공간</title>
   <link rel="stylesheet" href="css/style.css">
+  <style>
+    .proto-btns {
+      position: absolute;
+      bottom: 20px;
+      right: 24px;
+      display: flex;
+      gap: 10px;
+    }
+    .proto-btn {
+      padding: 10px 22px;
+      border: none;
+      border-radius: 22px;
+      font-size: 14px;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      letter-spacing: 0.3px;
+      transition: transform 0.12s, background 0.15s;
+    }
+    .proto-btn:active { transform: scale(0.95); }
+    #smile-btn { background:#FFD700; color:#7a4800; box-shadow:0 3px 10px rgba(255,200,0,0.35); }
+    #smile-btn:hover { background:#FFC400; }
+    #speak-btn { background:#ffffff; color:#333; box-shadow:0 3px 10px rgba(0,0,0,0.12); }
+    #speak-btn:hover { background:#f5f5f5; }
+  </style>
 </head>
 <body>
 <div id="game-screen" class="screen">
-
   <canvas id="game-canvas" tabindex="0"></canvas>
-
-  <!-- HUD: hint -->
   <div class="game-ui">마우스 드래그로 시점을 돌려 관찰하세요</div>
-
-  <!-- Character info badge -->
   <div class="char-info">
     <div class="mbti-badge">—</div>
     <div class="mbti-name-sm"></div>
   </div>
-
+  <!-- 프로토타입 버튼들 -->
+  <div class="proto-btns">
+    <button id="speak-btn" class="proto-btn">💬 말하기</button>
+    <button id="smile-btn" class="proto-btn">😊 웃기</button>
+  </div>
 </div>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="js/parts.js"></script>
 <script src="js/game.js"></script>
