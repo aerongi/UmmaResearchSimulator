@@ -16,17 +16,14 @@
 
     <div class="customize-layout">
 
-      <!-- 왼쪽: 미리보기 (상체 포함) -->
+      <!-- 왼쪽: 미리보기 (4) -->
       <div class="preview-panel">
         <div class="preview-bg">
-          <canvas id="preview-canvas" width="240" height="360"></canvas>
-        </div>
-        <div class="skin-row" style="margin-top:10px;">
-          <span style="font-size:12px;color:#999;margin-right:6px;">피부</span>
+          <canvas id="preview-canvas" width="360" height="500"></canvas>
         </div>
       </div>
 
-      <!-- 오른쪽: 옵션 -->
+      <!-- 오른쪽: 옵션 (6) -->
       <div class="options-panel">
         <div class="category-tabs">
           <button class="cat-tab active" data-cat="face">얼굴</button>
@@ -43,23 +40,19 @@
             <button class="sub-tab" data-sub="nose">코</button>
             <button class="sub-tab" data-sub="mouth">입</button>
           </div>
-          <!-- 얼굴형 -->
           <div id="sub-face-shape" class="sub-panel">
             <div class="parts-grid" id="face-grid"></div>
           </div>
-          <!-- 눈 + 눈썹 (JS가 섹션 두 개로 채워줌) -->
           <div id="sub-eyes" class="sub-panel hidden"></div>
-          <!-- 코 -->
           <div id="sub-nose" class="sub-panel hidden">
             <div class="parts-grid" id="nose-grid"></div>
           </div>
-          <!-- 입 -->
           <div id="sub-mouth" class="sub-panel hidden">
             <div class="parts-grid" id="mouth-grid"></div>
           </div>
         </div>
 
-        <!-- 머리스타일 탭 (JS가 앞머리/뒷머리 섹션 채워줌) -->
+        <!-- 머리스타일 탭 -->
         <div id="panel-hair" class="category-panel hidden"></div>
 
         <!-- 의상 탭 -->
@@ -69,8 +62,8 @@
         <div id="panel-personality" class="category-panel hidden">
           <div id="personality-questions"></div>
         </div>
-
       </div>
+
     </div>
 
     <div class="bottom-bar">

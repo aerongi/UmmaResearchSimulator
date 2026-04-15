@@ -1,9 +1,7 @@
 'use strict';
 
 const state = {
-  skinColor:      'skin_0',
   hairColor:      'hc_0',
-  eyeColor:       'ec_0',
   faceType:       'face1',
   eyeType:        'eye1',
   eyebrowType:    'eyebrow1',
@@ -46,7 +44,6 @@ const MBTI_DATA = {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-  buildSkinRow();
   buildFaceGrids();
   buildHairPanel();
   buildClothingPanel();
@@ -68,50 +65,27 @@ async function drawPreview() {
   _previewPending = false;
 }
 
-/* ── 피부 색상 ─────────────────────────────────────── */
-function buildSkinRow() {
-  const row = document.querySelector('.skin-row');
-  FaceParts.SKIN_COLORS.forEach(c => {
-    const dot = _dot(c.hex, c.id === state.skinColor, () => {
-      state.skinColor = c.id;
-      row.querySelectorAll('.color-dot').forEach(d => d.classList.remove('selected'));
-      dot.classList.add('selected');
-      drawPreview(); refreshIcons();
-    });
-    row.appendChild(dot);
-  });
-}
-
-/* ── 얼굴 탭 그리드 ────────────────────────────────── */
+/* ── 얼굴 탭: 얼굴형 / 눈+눈썹 / 코 / 입 ─────────── */
 function buildFaceGrids() {
-  // 얼굴형
   buildGrid('face-grid', 'face', FaceParts.FACE_TYPES, 'faceType');
 
-  // 눈/눈썹 섹션 (sub-eyes 패널 안에 두 섹션)
   const eyePanel = document.getElementById('sub-eyes');
 
-  const eyeTitle = _sectionTitle('눈');
-  eyePanel.appendChild(eyeTitle);
-  const eyeGridWrap = document.createElement('div');
-  eyeGridWrap.innerHTML = '<div class="parts-grid" id="eyes-grid"></div>';
-  eyePanel.appendChild(eyeGridWrap);
+  eyePanel.appendChild(_sectionTitle('눈'));
+  eyePanel.insertAdjacentHTML('beforeend', '<div class="parts-grid" id="eyes-grid"></div>');
   buildGrid('eyes-grid', 'eyes', FaceParts.EYE_TYPES, 'eyeType');
-  eyePanel.appendChild(_colorSection('눈 색', FaceParts.EYE_COLORS, 'eyeColor'));
 
   const browTitle = _sectionTitle('눈썹');
   browTitle.style.marginTop = '18px';
   eyePanel.appendChild(browTitle);
-  const browGridWrap = document.createElement('div');
-  browGridWrap.innerHTML = '<div class="parts-grid" id="eyebrow-grid"></div>';
-  eyePanel.appendChild(browGridWrap);
+  eyePanel.insertAdjacentHTML('beforeend', '<div class="parts-grid" id="eyebrow-grid"></div>');
   buildGrid('eyebrow-grid', 'eyebrow', FaceParts.EYEBROW_TYPES, 'eyebrowType');
 
-  // 코/입
   buildGrid('nose-grid',  'nose',  FaceParts.NOSE_TYPES,  'noseType');
   buildGrid('mouth-grid', 'mouth', FaceParts.MOUTH_TYPES, 'mouthType');
 }
 
-/* ── 머리스타일 탭: 앞머리 + 뒷머리 ──────────────── */
+/* ── 머리스타일 탭: 앞머리 + 뒷머리 ─────────────────── */
 function buildHairPanel() {
   const panel = document.getElementById('panel-hair');
 
@@ -179,9 +153,9 @@ function buildPersonalityPanel() {
     qText.textContent = `Q${idx+1}. 나와 더 가까운 것은?`;
     item.appendChild(qText);
 
-    const row   = document.createElement('div'); row.className = 'scale-row';
-    const lL    = document.createElement('div'); lL.className  = 'scale-label';       lL.textContent = q.left;
-    const lR    = document.createElement('div'); lR.className  = 'scale-label right'; lR.textContent = q.right;
+    const row   = document.createElement('div'); row.className   = 'scale-row';
+    const lL    = document.createElement('div'); lL.className    = 'scale-label';       lL.textContent = q.left;
+    const lR    = document.createElement('div'); lR.className    = 'scale-label right'; lR.textContent = q.right;
     const boxes = document.createElement('div'); boxes.className = 'scale-boxes';
 
     for (let i = 1; i <= 6; i++) {
@@ -201,7 +175,7 @@ function buildPersonalityPanel() {
   });
 }
 
-/* ── 공통: 그리드 빌더 ─────────────────────────────── */
+/* ── 공통 ──────────────────────────────────────────── */
 function buildGrid(containerId, partType, types, stateKey) {
   const container = document.getElementById(containerId);
   types.forEach(t => {
@@ -221,7 +195,6 @@ function buildGrid(containerId, partType, types, stateKey) {
   });
 }
 
-/* ── 공통: 색상 섹션 ───────────────────────────────── */
 function _colorSection(label, colors, stateKey) {
   const sec  = document.createElement('div'); sec.className  = 'color-section';
   const lbl  = document.createElement('div'); lbl.className  = 'color-label'; lbl.textContent = label;
@@ -238,7 +211,6 @@ function _colorSection(label, colors, stateKey) {
   sec.append(lbl, grid); return sec;
 }
 
-/* ── 공통: 섹션 타이틀 ─────────────────────────────── */
 function _sectionTitle(text) {
   const el = document.createElement('div');
   el.style.cssText = 'font-size:12px;font-weight:600;color:#888;margin-bottom:10px;letter-spacing:0.5px;';
@@ -254,26 +226,20 @@ function _dot(hex, selected, onClick) {
   return d;
 }
 
-/* ── 아이콘 갱신 ───────────────────────────────────── */
 function refreshIcons() {
   document.querySelectorAll('.part-item').forEach(item => {
     const canvas = item.querySelector('canvas'); if (!canvas) return;
     const gridId = item.closest('.parts-grid')?.id;
     const map = {
-      'face-grid':       'face',
-      'eyes-grid':       'eyes',
-      'eyebrow-grid':    'eyebrow',
-      'nose-grid':       'nose',
-      'mouth-grid':      'mouth',
-      'front-hair-grid': 'fronthair',
-      'back-hair-grid':  'backhair',
+      'face-grid':'face', 'eyes-grid':'eyes', 'eyebrow-grid':'eyebrow',
+      'nose-grid':'nose', 'mouth-grid':'mouth',
+      'front-hair-grid':'fronthair', 'back-hair-grid':'backhair',
     };
     const pt = map[gridId];
     if (pt) FaceParts.drawIcon(canvas, pt, item.dataset.id, state);
   });
 }
 
-/* ── 탭 설정 ───────────────────────────────────────── */
 function setupCategoryTabs() {
   document.querySelectorAll('.cat-tab').forEach(tab => {
     tab.addEventListener('click', () => {
@@ -296,7 +262,6 @@ function setupSubTabs() {
   });
 }
 
-/* ── 완성 버튼 ─────────────────────────────────────── */
 function setupCompleteBtn() {
   document.getElementById('complete-btn').addEventListener('click', e => {
     if (!e.currentTarget.classList.contains('active')) return;
@@ -311,24 +276,20 @@ function checkComplete() {
   }
 }
 
-/* ── MBTI 계산 ─────────────────────────────────────── */
 function computeMBTI() {
   const sc = { EI:0, SN:0, TF:0, JP:0 };
   QUESTIONS.forEach((q, i) => { sc[q.dim] += (state.personality[`q${i}`] || 3.5) - 3.5; });
   return (sc.EI>=0?'E':'I') + (sc.SN>=0?'N':'S') + (sc.TF>=0?'F':'T') + (sc.JP>=0?'P':'J');
 }
 
-/* ── 결과 화면 ─────────────────────────────────────── */
 function showResult() {
   const mbti = computeMBTI();
   const data = MBTI_DATA[mbti] || { name:'독특한 유형', desc:'세상에 하나뿐인 특별한 성격입니다.' };
   document.getElementById('mbti-type-display').textContent = mbti;
   document.querySelector('.mbti-name').textContent          = data.name;
   document.getElementById('mbti-desc-display').textContent  = data.desc;
-
   document.getElementById('customize-screen').classList.add('hidden');
   document.getElementById('result-screen').classList.remove('hidden');
-
   document.getElementById('next-btn').addEventListener('click', () => {
     localStorage.setItem('charData', JSON.stringify({ ...state, mbti, mbtiName: data.name }));
     window.location.href = 'game.html';
