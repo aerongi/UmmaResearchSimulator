@@ -11,7 +11,7 @@ const D = Object.assign({
 
 function getHex(list,id,fb){ return (list.find(c=>c.id===id)||{hex:fb}).hex; }
 const clothingHex = getHex(FaceParts.CLOTHING_COLORS, D.clothingColor, '#EEEEEE');
-const skinHex     = getHex(FaceParts.SKIN_COLORS,     D.skinColor,     '#FDDBB4');
+const skinHex = '#FDDBB4';
 
 /* ── Renderer ──────────────────────────────────────── */
 const canvas = document.getElementById('game-canvas');
