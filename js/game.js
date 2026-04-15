@@ -49,9 +49,9 @@ lamp.position.set(3.5, 2.5, 2); scene.add(lamp);
 
 /* ── Room (bigger: 12w × 10d × 3.6h) ──────────────── */
 const RW=12, RD=10, RH=3.6;
-const WHITE     = new THREE.MeshStandardMaterial({ color:0xf4f4f4, roughness:0.88 });
-const FLOOR_MAT = new THREE.MeshStandardMaterial({ color:0xe2d8c4, roughness:0.92 });
-const WALL_L    = new THREE.MeshStandardMaterial({ color:0xeceae6, roughness:0.9  });
+const WHITE     = new THREE.MeshStandardMaterial({ color:0xf4f4f4, roughness:0.88, side:THREE.DoubleSide });
+const FLOOR_MAT = new THREE.MeshStandardMaterial({ color:0xe2d8c4, roughness:0.92, side:THREE.DoubleSide });
+const WALL_L    = new THREE.MeshStandardMaterial({ color:0xeceae6, roughness:0.9,  side:THREE.DoubleSide });
 
 function addPlane(w,h,rx,ry,rz,px,py,pz,mat) {
   const m = new THREE.Mesh(new THREE.PlaneGeometry(w,h), mat);
