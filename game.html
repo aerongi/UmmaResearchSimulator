@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>나의 공간</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="game-screen" class="screen">
+
+  <canvas id="game-canvas" tabindex="0"></canvas>
+
+  <!-- HUD: hint -->
+  <div class="game-ui">마우스 드래그로 시점을 돌려 관찰하세요</div>
+
+  <!-- Character info badge -->
+  <div class="char-info">
+    <div class="mbti-badge">—</div>
+    <div class="mbti-name-sm"></div>
+  </div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="js/parts.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>
