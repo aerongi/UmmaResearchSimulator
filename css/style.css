@@ -3,7 +3,7 @@
 html, body {
   width: 100%; height: 100%;
   font-family: -apple-system, 'Noto Sans KR', 'Segoe UI', sans-serif;
-  background: #c8c8c8;
+  background: #f2f2f2;
   overflow: hidden;
 }
 
@@ -16,7 +16,7 @@ html, body {
 #customize-screen {
   display: flex;
   flex-direction: column;
-  background: #d2d2d2;
+  background: #f2f2f2;
 }
 
 /* 상단 타이틀 바 */
@@ -57,17 +57,12 @@ html, body {
 /* 비율 고정 래퍼 (canvas 비율 왜곡 방지) */
 .preview-aspect {
   width: 100%;
-  max-width: 320px;
-  position: relative;
-  /* 360:500 = 72% */
-  aspect-ratio: 360 / 500;
+  max-width: 300px;
 }
-.preview-aspect canvas {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+#preview-canvas {
   display: block;
+  width: 100%;
+  aspect-ratio: 360 / 500;
 }
 
 /* ── 오른쪽: 옵션 (60%) ── */
@@ -234,7 +229,7 @@ html, body {
    결과 화면
 ═══════════════════════════════════════════ */
 #result-screen {
-  background: #d2d2d2;
+  background: #f2f2f2;
   display: flex;
   align-items: center;
   justify-content: center;
