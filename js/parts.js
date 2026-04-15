@@ -98,31 +98,31 @@ const FaceParts = (() => {
 
   /* ── 커스터마이징 미리보기: 얼굴 + 심플 몸통 막대 ── */
   async function drawPreview(ctx, state) {
-    const W = ctx.canvas.width, H = ctx.canvas.height;
-    ctx.clearRect(0, 0, W, H);
+  const W = ctx.canvas.width, H = ctx.canvas.height;
+  ctx.clearRect(0, 0, W, H);
 
-    // 얼굴 영역: 상단 60%
-    const faceH = Math.floor(H * 0.60);
-    const tmp = document.createElement('canvas');
-    tmp.width = W; tmp.height = faceH;
-    await drawFace(tmp.getContext('2d'), state);
-    ctx.drawImage(tmp, 0, 0);
+  // 얼굴은 반드시 정사각형으로! (PNG가 512×512 기준이라 비율 유지 필수)
+  const faceSize = Math.min(W, Math.floor(H * 0.62));
+  const faceX = (W - faceSize) / 2;
 
-    // 몸통: 기다란 둥근 막대 하나 (팔 없음)
-    const clothHex = (CLOTHING_COLORS.find(c=>c.id===state.clothingColor)||CLOTHING_COLORS[0]).hex;
-    const cx  = W / 2;
-    const bw  = W * 0.28;       // 막대 폭
-    const bh  = H * 0.36;       // 막대 높이
-    const br  = bw / 2;         // 끝 반원
-    const bx  = cx - bw / 2;
-    const by  = faceH + H * 0.01;
+  const tmp = document.createElement('canvas');
+  tmp.width = faceSize; tmp.height = faceSize;
+  await drawFace(tmp.getContext('2d'), state);
+  ctx.drawImage(tmp, faceX, 0);
 
-    ctx.fillStyle = clothHex;
-    ctx.beginPath();
-    ctx.roundRect(bx, by, bw, bh, br);
-    ctx.fill();
-  }
+  // 몸통 막대
+  const clothHex = (CLOTHING_COLORS.find(c=>c.id===state.clothingColor)||CLOTHING_COLORS[0]).hex;
+  const cx  = W / 2;
+  const bw  = W * 0.26;
+  const by  = faceSize + H * 0.01;
+  const bh  = H - by - H * 0.03;
+  const br  = bw / 2;
 
+  ctx.fillStyle = clothHex;
+  ctx.beginPath();
+  ctx.roundRect(cx - bw/2, by, bw, bh, br);
+  ctx.fill();
+}
   /* ── 그리드 아이콘 (PNG 없으면 빈 배경) ────────────── */
   async function drawIcon(canvas, partType, partId, state) {
     const ctx = canvas.getContext('2d');
