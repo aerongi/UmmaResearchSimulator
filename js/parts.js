@@ -9,7 +9,7 @@ const FaceParts = (() => {
   ];
   const CLOTHING_COLORS = [
     { id:'cl_yellow',   hex:'#F5C842', label:'옐로우'  },
-    { id:'cl_white',    hex:'##D4D4D4', label:'화이트'  },
+    { id:'cl_white',    hex:'#D4D4D4', label:'화이트'  },
     { id:'cl_blue',     hex:'#5B9BD5', label:'블루'    },
     { id:'cl_navy',     hex:'#2C3E6B', label:'네이비'  },
     { id:'cl_coral',    hex:'#E8735A', label:'코랄'    },
