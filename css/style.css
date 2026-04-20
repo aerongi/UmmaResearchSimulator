@@ -183,7 +183,7 @@ html, body {
 .part-item {
   aspect-ratio: 1;
   border: 1.5px solid rgba(0,0,0,0.1);
-  border-radius: 50%;
+  border-radius: 16%;
   background: white;
   cursor: pointer;
   display: flex;
