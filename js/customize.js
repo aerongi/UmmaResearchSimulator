@@ -9,7 +9,7 @@ const state = {
   mouthType:      'mouth1',
   frontHairType:  'hair1',
   backHairType:   'bhair1',
-  clothingColor:  'cl_yellow',   // 기본 노란색
+  clothingColor:  'cl_yellow',
   personality:    {},
 };
 
@@ -20,7 +20,7 @@ const QUESTIONS = [
   { dim:'SN', left:'계획할 때 구체적인 단계를 하나씩 정한다',     right:'계획할 때 방향만 잡고 흐름에 맡긴다'       },
   { dim:'TF', left:'중요한 결정은 논리와 효율로 내린다',          right:'중요한 결정은 감정과 관계를 먼저 생각한다' },
   { dim:'TF', left:'친구가 힘들 때 해결책을 먼저 제시한다',       right:'친구가 힘들 때 감정부터 공감해준다'        },
-  { dim:'JP', left:'내 일상은 계획적이고 규칙적이다',             right:'내 일상은 즉흥적이고 유연하다'            },
+  { dim:'JP', left:'내 일상은 계획적이고 규칙적이다',             right:'내 일상은 즉흥적이고 유연하다'             },
   { dim:'JP', left:'마감이 있으면 미리 여유있게 준비한다',        right:'마감이 있으면 막판에 집중력이 폭발한다'    },
 ];
 
@@ -54,6 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
   drawPreview();
 });
 
+/* ── 미리보기 ───────────────────────────────────── */
 let _previewPending = false;
 async function drawPreview() {
   if (_previewPending) return;
@@ -64,191 +65,235 @@ async function drawPreview() {
   _previewPending = false;
 }
 
+/* ── 얼굴 탭 ────────────────────────────────────── */
 function buildFaceGrids() {
   buildGrid('face-grid', 'face', FaceParts.FACE_TYPES, 'faceType');
 
   const eyePanel = document.getElementById('sub-eyes');
   eyePanel.appendChild(_sectionTitle('눈'));
-  eyePanel.insertAdjacentHTML('beforeend','<div class="parts-grid" id="eyes-grid"></div>');
+  eyePanel.insertAdjacentHTML('beforeend', '<div class="parts-grid" id="eyes-grid"></div>');
   buildGrid('eyes-grid', 'eyes', FaceParts.EYE_TYPES, 'eyeType');
 
-  const browTitle = _sectionTitle('눈썹');
-  browTitle.style.marginTop = '18px';
-  eyePanel.appendChild(browTitle);
-  eyePanel.insertAdjacentHTML('beforeend','<div class="parts-grid" id="eyebrow-grid"></div>');
+  eyePanel.appendChild(_sectionTitle('눈썹'));
+  eyePanel.insertAdjacentHTML('beforeend', '<div class="parts-grid" id="eyebrow-grid"></div>');
   buildGrid('eyebrow-grid', 'eyebrow', FaceParts.EYEBROW_TYPES, 'eyebrowType');
 
   buildGrid('nose-grid',  'nose',  FaceParts.NOSE_TYPES,  'noseType');
   buildGrid('mouth-grid', 'mouth', FaceParts.MOUTH_TYPES, 'mouthType');
 }
 
+/* ── 머리스타일 탭 ──────────────────────────────── */
 function buildHairPanel() {
   const panel = document.getElementById('panel-hair');
+
   function makeSection(label, gridId, types, stateKey, partType) {
-    const wrap = document.createElement('div'); wrap.style.marginBottom='20px';
-    wrap.appendChild(_sectionTitle(label));
-    const grid = document.createElement('div'); grid.className='parts-grid'; grid.id=gridId;
-    wrap.appendChild(grid); panel.appendChild(wrap);
+    panel.appendChild(_sectionTitle(label));
+    const grid = document.createElement('div');
+    grid.className = 'parts-grid';
+    grid.id = gridId;
+    panel.appendChild(grid);
     buildGrid(gridId, partType, types, stateKey);
   }
-  makeSection('앞머리','front-hair-grid',FaceParts.FRONT_HAIR_TYPES,'frontHairType','fronthair');
-  makeSection('뒷머리','back-hair-grid', FaceParts.BACK_HAIR_TYPES, 'backHairType', 'backhair');
+
+  makeSection('앞머리', 'front-hair-grid', FaceParts.FRONT_HAIR_TYPES, 'frontHairType', 'fronthair');
+  makeSection('뒷머리', 'back-hair-grid',  FaceParts.BACK_HAIR_TYPES,  'backHairType',  'backhair');
   panel.appendChild(_colorSection('머리색', FaceParts.HAIR_COLORS, 'hairColor'));
 }
 
+/* ── 의상 탭 ────────────────────────────────────── */
 function buildClothingPanel() {
   const panel = document.getElementById('panel-clothing');
+
   const intro = document.createElement('div');
-  intro.style.cssText='font-size:12px;color:#999;margin-bottom:16px;';
-  intro.textContent='캐릭터 옷 색상을 선택하세요.';
+  intro.className = 'intro-text';
+  intro.textContent = '캐릭터 옷 색상을 선택하세요.';
   panel.appendChild(intro);
+
   const grid = document.createElement('div');
-  grid.style.cssText='display:grid;grid-template-columns:repeat(5,1fr);gap:12px;';
+  grid.className = 'clothing-grid';
+
   FaceParts.CLOTHING_COLORS.forEach(c => {
-    const wrap = document.createElement('div');
-    wrap.style.cssText='display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;';
+    const item = document.createElement('div');
+    item.className = 'clothing-item' + (c.id === state.clothingColor ? ' selected' : '');
+
     const circle = document.createElement('div');
-    circle.style.cssText=`width:40px;height:40px;border-radius:50%;background:${c.hex};
-      border:3px solid ${c.id===state.clothingColor?'#007AFF':'transparent'};
-      box-shadow:inset 0 0 0 1px rgba(0,0,0,0.1),0 1px 4px rgba(0,0,0,0.12);transition:border-color 0.15s;`;
+    circle.className = 'clothing-circle';
+    circle.style.background = c.hex;
+
     const lbl = document.createElement('div');
-    lbl.style.cssText='font-size:10px;color:#888;'; lbl.textContent=c.label;
-    wrap.append(circle,lbl);
-    wrap.addEventListener('click',()=>{
-      state.clothingColor=c.id;
-      grid.querySelectorAll('div>div:first-child').forEach(d=>d.style.borderColor='transparent');
-      circle.style.borderColor='#007AFF';
+    lbl.className = 'clothing-label';
+    lbl.textContent = c.label;
+
+    item.append(circle, lbl);
+    item.addEventListener('click', () => {
+      state.clothingColor = c.id;
+      grid.querySelectorAll('.clothing-item').forEach(el => el.classList.remove('selected'));
+      item.classList.add('selected');
       drawPreview();
     });
-    grid.appendChild(wrap);
+    grid.appendChild(item);
   });
   panel.appendChild(grid);
 }
 
+/* ── 성격 탭 ────────────────────────────────────── */
 function buildPersonalityPanel() {
   const container = document.getElementById('personality-questions');
-  const intro = document.createElement('div'); intro.className='pers-intro';
-  intro.textContent='직관적으로 느껴지는 대로 선택하세요.'; container.appendChild(intro);
-  QUESTIONS.forEach((q,idx)=>{
-    const item=document.createElement('div'); item.className='question-item';
-    const qt=document.createElement('div'); qt.className='question-text';
-    qt.textContent=`Q${idx+1}. 나와 더 가까운 것은?`; item.appendChild(qt);
-    const row=document.createElement('div'); row.className='scale-row';
-    const lL=document.createElement('div'); lL.className='scale-label';       lL.textContent=q.left;
-    const lR=document.createElement('div'); lR.className='scale-label right'; lR.textContent=q.right;
-    const boxes=document.createElement('div'); boxes.className='scale-boxes';
-    for(let i=1;i<=6;i++){
-      const box=document.createElement('div'); box.className='scale-box'; box.dataset.val=i;
-      box.addEventListener('click',()=>{
-        state.personality[`q${idx}`]=i;
-        boxes.querySelectorAll('.scale-box').forEach(b=>b.classList.remove('selected'));
-        box.classList.add('selected'); checkComplete();
+
+  const intro = document.createElement('div');
+  intro.className = 'pers-intro';
+  intro.textContent = '직관적으로 느껴지는 대로 선택하세요.';
+  container.appendChild(intro);
+
+  QUESTIONS.forEach((q, idx) => {
+    const item  = document.createElement('div'); item.className  = 'question-item';
+    const qText = document.createElement('div'); qText.className = 'question-text';
+    qText.textContent = `Q${idx+1}. 나와 더 가까운 것은?`;
+    item.appendChild(qText);
+
+    const row   = document.createElement('div'); row.className   = 'scale-row';
+    const lL    = document.createElement('div'); lL.className    = 'scale-label';       lL.textContent = q.left;
+    const lR    = document.createElement('div'); lR.className    = 'scale-label right'; lR.textContent = q.right;
+    const boxes = document.createElement('div'); boxes.className = 'scale-boxes';
+
+    for (let i = 1; i <= 6; i++) {
+      const box = document.createElement('div');
+      box.className = 'scale-box'; box.dataset.val = i;
+      box.addEventListener('click', () => {
+        state.personality[`q${idx}`] = i;
+        boxes.querySelectorAll('.scale-box').forEach(b => b.classList.remove('selected'));
+        box.classList.add('selected');
+        checkComplete();
       });
       boxes.appendChild(box);
     }
-    row.append(lL,boxes,lR); item.appendChild(row); container.appendChild(item);
+    row.append(lL, boxes, lR);
+    item.appendChild(row);
+    container.appendChild(item);
   });
 }
 
+/* ── 공통 ───────────────────────────────────────── */
 function buildGrid(containerId, partType, types, stateKey) {
   const container = document.getElementById(containerId);
-  types.forEach(t=>{
-    const item=document.createElement('div');
-    item.className='part-item'+(t.id===state[stateKey]?' selected':'');
-    item.dataset.id=t.id;
-    const ic=document.createElement('canvas'); ic.width=90; ic.height=90;
-    FaceParts.drawIcon(ic,partType,t.id,state);
+  types.forEach(t => {
+    const item = document.createElement('div');
+    item.className = 'part-item' + (t.id === state[stateKey] ? ' selected' : '');
+    item.dataset.id = t.id;
+    const ic = document.createElement('canvas');
+    ic.width = 90; ic.height = 90;
+    FaceParts.drawIcon(ic, partType, t.id, state);
     item.appendChild(ic);
-    item.addEventListener('click',()=>{
-      state[stateKey]=t.id;
-      container.querySelectorAll('.part-item').forEach(el=>el.classList.remove('selected'));
-      item.classList.add('selected'); drawPreview(); refreshIcons();
+    item.addEventListener('click', () => {
+      state[stateKey] = t.id;
+      container.querySelectorAll('.part-item').forEach(el => el.classList.remove('selected'));
+      item.classList.add('selected');
+      drawPreview();
+      refreshIcons();
     });
     container.appendChild(item);
   });
 }
 
-function _colorSection(label,colors,stateKey){
-  const sec=document.createElement('div'); sec.className='color-section';
-  const lbl=document.createElement('div'); lbl.className='color-label'; lbl.textContent=label;
-  const grid=document.createElement('div'); grid.className='color-grid';
-  colors.forEach(c=>{
-    const dot=_dot(c.hex,c.id===state[stateKey],()=>{
-      state[stateKey]=c.id;
-      grid.querySelectorAll('.color-dot').forEach(d=>d.classList.remove('selected'));
-      dot.classList.add('selected'); drawPreview(); refreshIcons();
+function _colorSection(label, colors, stateKey) {
+  const sec = document.createElement('div'); sec.className = 'color-section';
+  const lbl = document.createElement('div'); lbl.className = 'color-label'; lbl.textContent = label;
+  const grid = document.createElement('div'); grid.className = 'color-grid';
+  colors.forEach(c => {
+    const dot = _dot(c.hex, c.id === state[stateKey], () => {
+      state[stateKey] = c.id;
+      grid.querySelectorAll('.color-dot').forEach(d => d.classList.remove('selected'));
+      dot.classList.add('selected');
+      drawPreview();
+      refreshIcons();
     });
     grid.appendChild(dot);
   });
-  sec.append(lbl,grid); return sec;
+  sec.append(lbl, grid);
+  return sec;
 }
 
-function _sectionTitle(text){
-  const el=document.createElement('div');
-  el.style.cssText='font-size:11px;font-weight:600;color:#999;margin-bottom:8px;letter-spacing:0.8px;text-transform:uppercase;';
-  el.textContent=text; return el;
+function _sectionTitle(text) {
+  const el = document.createElement('div');
+  el.className = 'section-title';
+  el.textContent = text;
+  return el;
 }
-function _dot(hex,selected,onClick){
-  const d=document.createElement('div');
-  d.className='color-dot'+(selected?' selected':'');
-  d.style.background=hex; d.addEventListener('click',onClick); return d;
+
+function _dot(hex, selected, onClick) {
+  const d = document.createElement('div');
+  d.className = 'color-dot' + (selected ? ' selected' : '');
+  d.style.background = hex;
+  d.addEventListener('click', onClick);
+  return d;
 }
-function refreshIcons(){
-  document.querySelectorAll('.part-item').forEach(item=>{
-    const canvas=item.querySelector('canvas'); if(!canvas) return;
-    const gridId=item.closest('.parts-grid')?.id;
-    const map={'face-grid':'face','eyes-grid':'eyes','eyebrow-grid':'eyebrow',
-               'nose-grid':'nose','mouth-grid':'mouth',
-               'front-hair-grid':'fronthair','back-hair-grid':'backhair'};
-    const pt=map[gridId]; if(pt) FaceParts.drawIcon(canvas,pt,item.dataset.id,state);
+
+function refreshIcons() {
+  document.querySelectorAll('.part-item').forEach(item => {
+    const canvas = item.querySelector('canvas'); if (!canvas) return;
+    const gridId = item.closest('.parts-grid')?.id;
+    const map = {
+      'face-grid':'face', 'eyes-grid':'eyes', 'eyebrow-grid':'eyebrow',
+      'nose-grid':'nose', 'mouth-grid':'mouth',
+      'front-hair-grid':'fronthair', 'back-hair-grid':'backhair',
+    };
+    const pt = map[gridId];
+    if (pt) FaceParts.drawIcon(canvas, pt, item.dataset.id, state);
   });
 }
-function setupCategoryTabs(){
-  document.querySelectorAll('.cat-tab').forEach(tab=>{
-    tab.addEventListener('click',()=>{
-      document.querySelectorAll('.cat-tab').forEach(t=>t.classList.remove('active'));
+
+function setupCategoryTabs() {
+  document.querySelectorAll('.cat-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
-      document.querySelectorAll('.category-panel').forEach(p=>p.classList.add('hidden'));
+      document.querySelectorAll('.category-panel').forEach(p => p.classList.add('hidden'));
       document.getElementById(`panel-${tab.dataset.cat}`).classList.remove('hidden');
     });
   });
 }
-function setupSubTabs(){
-  document.querySelectorAll('.sub-tab').forEach(tab=>{
-    tab.addEventListener('click',()=>{
-      tab.closest('.sub-tabs').querySelectorAll('.sub-tab').forEach(t=>t.classList.remove('active'));
+
+function setupSubTabs() {
+  document.querySelectorAll('.sub-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      tab.closest('.sub-tabs').querySelectorAll('.sub-tab').forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
-      document.querySelectorAll('.sub-panel').forEach(p=>p.classList.add('hidden'));
+      document.querySelectorAll('.sub-panel').forEach(p => p.classList.add('hidden'));
       document.getElementById(`sub-${tab.dataset.sub}`).classList.remove('hidden');
     });
   });
 }
-function setupCompleteBtn(){
-  document.getElementById('complete-btn').addEventListener('click',e=>{
-    if(!e.currentTarget.classList.contains('active')) return; showResult();
+
+function setupCompleteBtn() {
+  document.getElementById('complete-btn').addEventListener('click', e => {
+    if (!e.currentTarget.classList.contains('active')) return;
+    showResult();
   });
 }
-function checkComplete(){
-  if(Object.keys(state.personality).length>=QUESTIONS.length){
-    const btn=document.getElementById('complete-btn');
-    btn.classList.add('active'); btn.disabled=false;
+
+function checkComplete() {
+  if (Object.keys(state.personality).length >= QUESTIONS.length) {
+    const btn = document.getElementById('complete-btn');
+    btn.classList.add('active'); btn.disabled = false;
   }
 }
-function computeMBTI(){
-  const sc={EI:0,SN:0,TF:0,JP:0};
-  QUESTIONS.forEach((q,i)=>{sc[q.dim]+=(state.personality[`q${i}`]||3.5)-3.5;});
-  return (sc.EI>=0?'E':'I')+(sc.SN>=0?'N':'S')+(sc.TF>=0?'F':'T')+(sc.JP>=0?'P':'J');
+
+function computeMBTI() {
+  const sc = { EI:0, SN:0, TF:0, JP:0 };
+  QUESTIONS.forEach((q, i) => { sc[q.dim] += (state.personality[`q${i}`] || 3.5) - 3.5; });
+  return (sc.EI>=0?'E':'I') + (sc.SN>=0?'N':'S') + (sc.TF>=0?'F':'T') + (sc.JP>=0?'P':'J');
 }
-function showResult(){
-  const mbti=computeMBTI();
-  const data=MBTI_DATA[mbti]||{name:'독특한 유형',desc:'세상에 하나뿐인 특별한 성격입니다.'};
-  document.getElementById('mbti-type-display').textContent=mbti;
-  document.querySelector('.mbti-name').textContent=data.name;
-  document.getElementById('mbti-desc-display').textContent=data.desc;
+
+function showResult() {
+  const mbti = computeMBTI();
+  const data = MBTI_DATA[mbti] || { name:'독특한 유형', desc:'세상에 하나뿐인 특별한 성격입니다.' };
+  document.getElementById('mbti-type-display').textContent = mbti;
+  document.querySelector('.mbti-name').textContent          = data.name;
+  document.getElementById('mbti-desc-display').textContent  = data.desc;
   document.getElementById('customize-screen').classList.add('hidden');
   document.getElementById('result-screen').classList.remove('hidden');
-  document.getElementById('next-btn').addEventListener('click',()=>{
-    localStorage.setItem('charData',JSON.stringify({...state,mbti,mbtiName:data.name}));
-    window.location.href='game.html';
-  },{once:true});
+  document.getElementById('next-btn').addEventListener('click', () => {
+    localStorage.setItem('charData', JSON.stringify({ ...state, mbti, mbtiName: data.name }));
+    window.location.href = 'game.html';
+  }, { once: true });
 }

@@ -11,7 +11,7 @@ const D = Object.assign({
 
 function getHex(list,id,fb){ return (list.find(c=>c.id===id)||{hex:fb}).hex; }
 const clothingHex = getHex(FaceParts.CLOTHING_COLORS, D.clothingColor, '#EEEEEE');
-const skinHex = '#FDDBB4';
+const skinHex     = getHex(FaceParts.SKIN_COLORS,     D.skinColor,     '#FDDBB4');
 
 /* ── Renderer ──────────────────────────────────────── */
 const canvas = document.getElementById('game-canvas');
@@ -174,6 +174,7 @@ function addPart(geo,mat,x,y,z){
   const m=new THREE.Mesh(geo,mat); m.position.set(x,y,z);
   m.castShadow=true; m.receiveShadow=true; charGroup.add(m); return m;
 }
+const neck  =addPart(new THREE.CylinderGeometry(0.09,0.09,0.12,8),skinMat,  0,1.26,0);
 const torso =addPart(new THREE.BoxGeometry(0.5,0.6,0.3),clothingMat,         0,0.94,0);
 const uArmL =addPart(new THREE.BoxGeometry(0.19,0.4,0.19),clothingMat, -0.36,0.98,0);
 const uArmR =addPart(new THREE.BoxGeometry(0.19,0.4,0.19),clothingMat,  0.36,0.98,0);
@@ -362,7 +363,7 @@ function animate(){
   requestAnimationFrame(animate);
   const t=clock.getElapsedTime();
   const b=Math.sin(t*1.4)*0.013;
-  torso.position.y=0.94+b;
+  torso.position.y=0.94+b; neck.position.y=1.26+b*0.8;
   headPlane.position.y=1.60+b*1.3;
   backHairPlane.position.y=1.60+b*1.3;
   charGroup.rotation.y=Math.sin(t*0.65)*beh.sway*0.013;
