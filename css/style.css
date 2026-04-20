@@ -4,7 +4,7 @@ html, body {
   width: 100%;
   height: 100%;
   font-family: -apple-system, BlinkMacSystemFont, 'Noto Sans KR', 'Segoe UI', sans-serif;
-  background: #EDE4D3;
+  background: #f2f2f2;
   color: #2A2A2A;
   overflow: hidden;
   -webkit-font-smoothing: antialiased;
@@ -19,7 +19,7 @@ html, body {
 #customize-screen {
   display: flex;
   flex-direction: column;
-  background: #EDE4D3;
+  background: #f2f2f2;
 }
 
 /* ── 상단 헤더 ── */
@@ -49,23 +49,26 @@ html, body {
 }
 
 /* ── 왼쪽: 미리보기 ── */
+/* preview-panel: 45%로 확대 */
 .preview-panel {
-  flex: 0 0 42%;
+  flex: 0 0 45%;
   display: flex;
   align-items: center;
   justify-content: center;
-  position: relative;
+  padding: 20px 14px 20px 20px;
+  border-right: 1px solid rgba(0,0,0,0.12);
 }
 
+/* preview-aspect: padding-top 비율 고정 방식으로 교체 */
 .preview-aspect {
   width: 100%;
-  max-width: 380px;
+  max-width: 360px;
   position: relative;
 }
 .preview-aspect::before {
   content: '';
   display: block;
-  padding-top: 138.9%; /* 500/360 */
+  padding-top: 138.9%;   /* 500/360 × 100% */
 }
 #preview-canvas {
   position: absolute;
@@ -360,7 +363,7 @@ html, body {
    결과 화면
 ═══════════════════════════════════════════ */
 #result-screen {
-  background: #EDE4D3;
+  background: #f2f2f2;
   display: flex;
   align-items: center;
   justify-content: center;
