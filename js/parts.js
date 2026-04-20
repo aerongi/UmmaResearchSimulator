@@ -96,7 +96,6 @@ const FaceParts = (() => {
     if (img) ctx.drawImage(_tint(img, hair, W, H), 0, 0, W, H);
   }
 
-  /* ── 커스터마이징 미리보기: 얼굴 + 심플 몸통 막대 ── */
 async function drawPreview(ctx, state) {
   const W = ctx.canvas.width, H = ctx.canvas.height;
   ctx.clearRect(0, 0, W, H);
