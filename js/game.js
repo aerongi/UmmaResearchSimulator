@@ -40,7 +40,6 @@ sun.shadow.camera.top=12;   sun.shadow.camera.bottom=-12;
 sun.shadow.camera.near=0.1; sun.shadow.camera.far=40;
 scene.add(sun);
 const fillL=new THREE.PointLight(0xc8e4ff,0.3,18); fillL.position.set(-5,3,-3); scene.add(fillL);
-const lampL=new THREE.PointLight(0xffd080,0.5,9);  lampL.position.set(3.5,2.5,2); scene.add(lampL);
 
 /* ── Room ──────────────────────────────────────────── */
 const RW=12, RD=10, RH=3.6;
@@ -178,6 +177,7 @@ function addPart(geo,mat,x,y,z){
 const torso =addPart(new THREE.CylinderGeometry(0.16,0.19,0.62,16), clothingMat, 0,0.94,0);
 // 몸통 하단 반구 (아래가 동그랗게 마무리)
 const torsoBottom =addPart(new THREE.SphereGeometry(0.19,16,8), clothingMat, 0,0.63,0);
+torsoBottom.castShadow = false;
 
 // 팔 (투명, 나중에 애니메이션 대비용)
 const invisMat = new THREE.MeshStandardMaterial({transparent:true, opacity:0});
@@ -189,6 +189,16 @@ const fArmR =addPart(new THREE.CylinderGeometry(0.08,0.09,0.32,12), invisMat,  0
 // 손 (동그란 구, 둥둥)
 const handL =addPart(new THREE.SphereGeometry(0.11,14,10), skinMat, -0.42,0.65,0);
 const handR =addPart(new THREE.SphereGeometry(0.11,14,10), skinMat,  0.42,0.65,0);
+
+//그림자
+const blobGeo = new THREE.CircleGeometry(0.28, 32);
+const blobMat = new THREE.MeshBasicMaterial({ color:0x000000, transparent:true, opacity:0.18 });
+const blobShadow = new THREE.Mesh(blobGeo, blobMat);
+blobShadow.rotation.x = -Math.PI/2;
+blobShadow.position.set(0, 0.005, 0);
+charGroup.add(blobShadow);
+
+renderer.shadowMap.enabled = false;
 
 /* ══════════════════════════════════════════
    말풍선 (Sprite → 항상 카메라를 향함)
@@ -333,6 +343,7 @@ window.addEventListener('mousemove',e=>{
   if(!dragging) return;
   azimuth-=(e.clientX-lastX)*0.007; elevation+=(e.clientY-lastY)*0.005;
   elevation=Math.max(-0.05,Math.min(0.32,elevation));
+ azimuth=Math.max(-0.8,Math.min(0.8,azimuth));
   lastX=e.clientX; lastY=e.clientY; updateCamera();
 });
 window.addEventListener('mouseup',()=>{dragging=false;canvas.style.cursor='grab';});
@@ -342,6 +353,7 @@ canvas.addEventListener('touchmove',e=>{
   if(!dragging) return;
   azimuth-=(e.touches[0].clientX-lastX)*0.007; elevation+=(e.touches[0].clientY-lastY)*0.005;
   elevation=Math.max(-0.08,Math.min(0.38,elevation));
+ azimuth=Math.max(-0.8,Math.min(0.8,azimuth));
   lastX=e.touches[0].clientX; lastY=e.touches[0].clientY; updateCamera();
 },{passive:true});
 canvas.addEventListener('touchend',()=>dragging=false);
