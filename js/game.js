@@ -371,6 +371,32 @@ const BEH={
 };
 const beh=BEH[D.mbti]||BEH.ENFP;
 
+/* ── 캐릭터 랜덤 이동 ── */
+let targetX = 0.4, targetZ = 0.5;
+let moveTimer = 0;
+const MOVE_SPEED = 0.012;
+const ROOM_MARGIN = 1.5;
+const CAM_SAFE_DIST = 3.5; // 카메라에서 이 거리 이내로 못 들어옴
+
+function pickNewTarget() {
+  // 방 안에서 랜덤 위치 선택
+  let tx, tz, attempts = 0;
+  do {
+    tx = (Math.random() - 0.5) * (RW - ROOM_MARGIN * 2);
+    tz = (Math.random() - 0.5) * (RD - ROOM_MARGIN * 2);
+    attempts++;
+  } while (
+    // 카메라 앞쪽 너무 가까우면 재선택
+    Math.sqrt((tx - TARGET.x) ** 2 + (tz - TARGET.z) ** 2) < CAM_SAFE_DIST
+    && attempts < 20
+  );
+  targetX = tx;
+  targetZ = tz;
+  moveTimer = 3 + Math.random() * 4; // 3~7초마다 새 목표
+}
+
+pickNewTarget();
+
 /* ── Animation ──────────────────────────────────────── */
 const clock=new THREE.Clock();
 function animate(){
@@ -386,6 +412,28 @@ handL.position.y = 0.65 + Math.sin(t*1.1 + 0.5)*0.04;
 handR.position.x =  0.42 - sw*0.08;
 handR.position.y = 0.65 + Math.sin(t*1.1 - 0.5)*0.04;
   charGroup.rotation.x=Math.sin(t*0.21)*0.01;
+
+/* ── 이동 업데이트 ── */
+const dt = 0.016;
+moveTimer -= dt;
+if (moveTimer <= 0) pickNewTarget();
+
+const dx = targetX - charGroup.position.x;
+const dz = targetZ - charGroup.position.z;
+const dist = Math.sqrt(dx*dx + dz*dz);
+
+let isWalking = false;
+if (dist > 0.08) {
+  isWalking = true;
+  charGroup.position.x += (dx/dist) * MOVE_SPEED;
+  charGroup.position.z += (dz/dist) * MOVE_SPEED;
+  // 이동 방향으로 캐릭터 회전
+  charGroup.rotation.y = Math.atan2(dx, dz);
+}
+
+// 걷기 뽀용뽀용 (위아래 바운스)
+const walkBounce = isWalking ? Math.abs(Math.sin(t * 8)) * 0.06 : 0;
+charGroup.position.y = walkBounce;
   renderer.render(scene,camera);
 }
 animate();
