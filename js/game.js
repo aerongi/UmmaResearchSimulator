@@ -174,18 +174,21 @@ function addPart(geo,mat,x,y,z){
   const m=new THREE.Mesh(geo,mat); m.position.set(x,y,z);
   m.castShadow=true; m.receiveShadow=true; charGroup.add(m); return m;
 }
-const torso =addPart(new THREE.BoxGeometry(0.5,0.6,0.3),clothingMat,         0,0.94,0);
-const uArmL =addPart(new THREE.BoxGeometry(0.19,0.4,0.19),clothingMat, -0.36,0.98,0);
-const uArmR =addPart(new THREE.BoxGeometry(0.19,0.4,0.19),clothingMat,  0.36,0.98,0);
-const fArmL =addPart(new THREE.BoxGeometry(0.16,0.34,0.16),skinMat,   -0.36,0.67,0);
-const fArmR =addPart(new THREE.BoxGeometry(0.16,0.34,0.16),skinMat,    0.36,0.67,0);
-const hips  =addPart(new THREE.BoxGeometry(0.46,0.23,0.28),pantsMat,    0,0.59,0);
-const uLegL =addPart(new THREE.BoxGeometry(0.2,0.44,0.21),pantsMat,  -0.13,0.28,0);
-const uLegR =addPart(new THREE.BoxGeometry(0.2,0.44,0.21),pantsMat,   0.13,0.28,0);
-const lLegL =addPart(new THREE.BoxGeometry(0.17,0.39,0.17),pantsMat, -0.13,-0.10,0);
-const lLegR =addPart(new THREE.BoxGeometry(0.17,0.39,0.17),pantsMat,  0.13,-0.10,0);
-const footL =addPart(new THREE.BoxGeometry(0.18,0.1,0.28),shoesMat,  -0.13,-0.34,0.05);
-const footR =addPart(new THREE.BoxGeometry(0.18,0.1,0.28),shoesMat,   0.13,-0.34,0.05);
+// 몸통
+const torso =addPart(new THREE.CylinderGeometry(0.22,0.26,0.62,16), clothingMat, 0,0.94,0);
+// 몸통 하단 반구 (아래가 동그랗게 마무리)
+const torsoBottom =addPart(new THREE.SphereGeometry(0.26,16,8), clothingMat, 0,0.63,0);
+
+// 팔 (투명, 나중에 애니메이션 대비용)
+const invisMat = new THREE.MeshStandardMaterial({transparent:true, opacity:0});
+const uArmL =addPart(new THREE.CylinderGeometry(0.09,0.11,0.38,12), invisMat, -0.38,0.98,0);
+const uArmR =addPart(new THREE.CylinderGeometry(0.09,0.11,0.38,12), invisMat,  0.38,0.98,0);
+const fArmL =addPart(new THREE.CylinderGeometry(0.08,0.09,0.32,12), invisMat, -0.38,0.65,0);
+const fArmR =addPart(new THREE.CylinderGeometry(0.08,0.09,0.32,12), invisMat,  0.38,0.65,0);
+
+// 손 (동그란 구, 둥둥)
+const handL =addPart(new THREE.SphereGeometry(0.11,14,10), skinMat, -0.42,0.78,0);
+const handR =addPart(new THREE.SphereGeometry(0.11,14,10), skinMat,  0.42,0.78,0);
 
 /* ══════════════════════════════════════════
    말풍선 (Sprite → 항상 카메라를 향함)
@@ -365,9 +368,11 @@ function animate(){
   headPlane.position.y=1.60+b*1.3;
   backHairPlane.position.y=1.60+b*1.3;
   charGroup.rotation.y=Math.sin(t*0.65)*beh.sway*0.013;
-  const sw=Math.sin(t*1.1)*beh.arm;
-  uArmL.rotation.z=sw+0.08; uArmR.rotation.z=-sw-0.08;
-  fArmL.rotation.z=sw*0.5+0.05; fArmR.rotation.z=-sw*0.5-0.05;
+const sw = Math.sin(t*1.1)*beh.arm;
+handL.position.x = -0.42 + sw*0.08;
+handL.position.y = 0.78 + Math.sin(t*1.1 + 0.5)*0.04;
+handR.position.x =  0.42 - sw*0.08;
+handR.position.y = 0.78 + Math.sin(t*1.1 - 0.5)*0.04;
   charGroup.rotation.x=Math.sin(t*0.21)*0.01;
   renderer.render(scene,camera);
 }
