@@ -152,7 +152,7 @@ const headMat = new THREE.MeshBasicMaterial({
   side: THREE.FrontSide, depthWrite:false,
 });
 const headPlane = new THREE.Mesh(new THREE.PlaneGeometry(0.84, 0.84), headMat);
-headPlane.position.set(0, 1.60, 0.04);
+headPlane.position.set(0, 1.75, 0.04);
 charGroup.add(headPlane);
 
 /* ── 뒷면 Back Hair Plane (뒤쪽, FrontSide) ─────── */
@@ -161,7 +161,7 @@ const backHairMat = new THREE.MeshBasicMaterial({
   side: THREE.FrontSide, depthWrite:false,
 });
 const backHairPlane = new THREE.Mesh(new THREE.PlaneGeometry(0.90, 0.90), backHairMat);
-backHairPlane.position.set(0, 1.60, -0.04);
+backHairPlane.position.set(0, 1.75, -0.04);
 backHairPlane.rotation.y = Math.PI; // 뒤를 향함
 charGroup.add(backHairPlane);
 
@@ -175,9 +175,9 @@ function addPart(geo,mat,x,y,z){
   m.castShadow=true; m.receiveShadow=true; charGroup.add(m); return m;
 }
 // 몸통
-const torso =addPart(new THREE.CylinderGeometry(0.22,0.26,0.62,16), clothingMat, 0,0.94,0);
+const torso =addPart(new THREE.CylinderGeometry(0.16,0.19,0.62,16), clothingMat, 0,0.94,0);
 // 몸통 하단 반구 (아래가 동그랗게 마무리)
-const torsoBottom =addPart(new THREE.SphereGeometry(0.26,16,8), clothingMat, 0,0.63,0);
+const torsoBottom =addPart(new THREE.SphereGeometry(0.19,16,8), clothingMat, 0,0.63,0);
 
 // 팔 (투명, 나중에 애니메이션 대비용)
 const invisMat = new THREE.MeshStandardMaterial({transparent:true, opacity:0});
@@ -187,8 +187,8 @@ const fArmL =addPart(new THREE.CylinderGeometry(0.08,0.09,0.32,12), invisMat, -0
 const fArmR =addPart(new THREE.CylinderGeometry(0.08,0.09,0.32,12), invisMat,  0.38,0.65,0);
 
 // 손 (동그란 구, 둥둥)
-const handL =addPart(new THREE.SphereGeometry(0.11,14,10), skinMat, -0.42,0.78,0);
-const handR =addPart(new THREE.SphereGeometry(0.11,14,10), skinMat,  0.42,0.78,0);
+const handL =addPart(new THREE.SphereGeometry(0.11,14,10), skinMat, -0.42,0.58,0);
+const handR =addPart(new THREE.SphereGeometry(0.11,14,10), skinMat,  0.42,0.58,0);
 
 /* ══════════════════════════════════════════
    말풍선 (Sprite → 항상 카메라를 향함)
@@ -365,14 +365,14 @@ function animate(){
   requestAnimationFrame(animate);
   const t=clock.getElapsedTime();
   const b=Math.sin(t*1.4)*0.013;
-  headPlane.position.y=1.60+b*1.3;
-  backHairPlane.position.y=1.60+b*1.3;
+  headPlane.position.y=1.75+b*1.3;
+  backHairPlane.position.y=1.75+b*1.3;
   charGroup.rotation.y=Math.sin(t*0.65)*beh.sway*0.013;
 const sw = Math.sin(t*1.1)*beh.arm;
 handL.position.x = -0.42 + sw*0.08;
-handL.position.y = 0.78 + Math.sin(t*1.1 + 0.5)*0.04;
+handL.position.y = 0.58 + Math.sin(t*1.1 + 0.5)*0.04;
 handR.position.x =  0.42 - sw*0.08;
-handR.position.y = 0.78 + Math.sin(t*1.1 - 0.5)*0.04;
+handR.position.y = 0.58 + Math.sin(t*1.1 - 0.5)*0.04;
   charGroup.rotation.x=Math.sin(t*0.21)*0.01;
   renderer.render(scene,camera);
 }
