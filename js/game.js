@@ -31,16 +31,16 @@ function onResize(){
 onResize(); window.addEventListener('resize', onResize);
 
 /* ── Lighting ──────────────────────────────────────── */
-scene.add(new THREE.AmbientLight(0xffffff, 0.5));
-const sun=new THREE.DirectionalLight(0xfff8f0,1.1);
+scene.add(new THREE.AmbientLight(0xffffff, 0.75));
+const sun = new THREE.DirectionalLight(0xfff8f0, 0.6);
 sun.position.set(4,9,5); sun.castShadow=true;
 sun.shadow.mapSize.set(2048,2048);
 sun.shadow.camera.left=-14; sun.shadow.camera.right=14;
 sun.shadow.camera.top=12;   sun.shadow.camera.bottom=-12;
 sun.shadow.camera.near=0.1; sun.shadow.camera.far=40;
 scene.add(sun);
-const fillL=new THREE.PointLight(0xc8e4ff,0.7,18); fillL.position.set(-5,3,-3); scene.add(fillL);
-const lampL=new THREE.PointLight(0xffd080,1.4,9);  lampL.position.set(3.5,2.5,2); scene.add(lampL);
+const fillL=new THREE.PointLight(0xc8e4ff,0.3,18); fillL.position.set(-5,3,-3); scene.add(fillL);
+const lampL=new THREE.PointLight(0xffd080,0.5,9);  lampL.position.set(3.5,2.5,2); scene.add(lampL);
 
 /* ── Room ──────────────────────────────────────────── */
 const RW=12, RD=10, RH=3.6;
@@ -51,11 +51,11 @@ function addPlane(w,h,rx,ry,rz,px,py,pz,mat){
   const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),mat);
   m.rotation.set(rx,ry,rz); m.position.set(px,py,pz); m.receiveShadow=true; scene.add(m);
 }
-addPlane(RW,RD,-Math.PI/2,0,0, 0,0,0,       FLOOR_MAT);
-addPlane(RW,RH,0,0,0,           0,RH/2,-RD/2,WHITE);
-addPlane(RD,RH,0,Math.PI/2,0,  -RW/2,RH/2,0,WALL_L);
-addPlane(RD,RH,0,-Math.PI/2,0,  RW/2,RH/2,0,WHITE);
-addPlane(RW,RD,Math.PI/2,0,0,   0,RH,0,     WHITE);
+addPlane(RW,RD,-Math.PI/2,0,0,       0,0,0,       FLOOR_MAT);  // 바닥
+addPlane(RW,RH,0,Math.PI,0,           0,RH/2,-RD/2,WHITE);      // 뒷벽 ← π 추가
+addPlane(RD,RH,0,-Math.PI/2,0,       -RW/2,RH/2,0,WALL_L);     // 왼벽 ← 부호 반전
+addPlane(RD,RH,0,Math.PI/2,0,         RW/2,RH/2,0,WHITE);      // 오른벽
+addPlane(RW,RD,Math.PI/2,0,0,         0,RH,0,     WHITE);       // 천장
 const sk=new THREE.Mesh(new THREE.BoxGeometry(RW,0.09,0.05),
   new THREE.MeshStandardMaterial({color:0xd0c8b8,roughness:0.8}));
 sk.position.set(0,0.045,-RD/2+0.03); scene.add(sk);
@@ -152,7 +152,7 @@ const headMat = new THREE.MeshBasicMaterial({
   side: THREE.FrontSide, depthWrite:false,
 });
 const headPlane = new THREE.Mesh(new THREE.PlaneGeometry(0.84, 0.84), headMat);
-headPlane.position.set(0, 1.75, 0.04);
+headPlane.position.set(0, 1.65, 0.04);
 charGroup.add(headPlane);
 
 /* ── 뒷면 Back Hair Plane (뒤쪽, FrontSide) ─────── */
@@ -161,7 +161,7 @@ const backHairMat = new THREE.MeshBasicMaterial({
   side: THREE.FrontSide, depthWrite:false,
 });
 const backHairPlane = new THREE.Mesh(new THREE.PlaneGeometry(0.90, 0.90), backHairMat);
-backHairPlane.position.set(0, 1.75, -0.04);
+backHairPlane.position.set(0, 1.65, -0.04);
 backHairPlane.rotation.y = Math.PI; // 뒤를 향함
 charGroup.add(backHairPlane);
 
@@ -187,8 +187,8 @@ const fArmL =addPart(new THREE.CylinderGeometry(0.08,0.09,0.32,12), invisMat, -0
 const fArmR =addPart(new THREE.CylinderGeometry(0.08,0.09,0.32,12), invisMat,  0.38,0.65,0);
 
 // 손 (동그란 구, 둥둥)
-const handL =addPart(new THREE.SphereGeometry(0.11,14,10), skinMat, -0.42,0.58,0);
-const handR =addPart(new THREE.SphereGeometry(0.11,14,10), skinMat,  0.42,0.58,0);
+const handL =addPart(new THREE.SphereGeometry(0.11,14,10), skinMat, -0.42,0.65,0);
+const handR =addPart(new THREE.SphereGeometry(0.11,14,10), skinMat,  0.42,0.65,0);
 
 /* ══════════════════════════════════════════
    말풍선 (Sprite → 항상 카메라를 향함)
@@ -332,7 +332,7 @@ canvas.addEventListener('mousedown',e=>{dragging=true;lastX=e.clientX;lastY=e.cl
 window.addEventListener('mousemove',e=>{
   if(!dragging) return;
   azimuth-=(e.clientX-lastX)*0.007; elevation+=(e.clientY-lastY)*0.005;
-  elevation=Math.max(-0.08,Math.min(0.38,elevation));
+  elevation=Math.max(-0.05,Math.min(0.32,elevation));
   lastX=e.clientX; lastY=e.clientY; updateCamera();
 });
 window.addEventListener('mouseup',()=>{dragging=false;canvas.style.cursor='grab';});
@@ -365,14 +365,14 @@ function animate(){
   requestAnimationFrame(animate);
   const t=clock.getElapsedTime();
   const b=Math.sin(t*1.4)*0.013;
-  headPlane.position.y=1.75+b*1.3;
-  backHairPlane.position.y=1.75+b*1.3;
+  headPlane.position.y=1.65+b*1.3;
+  backHairPlane.position.y=1.65+b*1.3;
   charGroup.rotation.y=Math.sin(t*0.65)*beh.sway*0.013;
 const sw = Math.sin(t*1.1)*beh.arm;
 handL.position.x = -0.42 + sw*0.08;
-handL.position.y = 0.58 + Math.sin(t*1.1 + 0.5)*0.04;
+handL.position.y = 0.65 + Math.sin(t*1.1 + 0.5)*0.04;
 handR.position.x =  0.42 - sw*0.08;
-handR.position.y = 0.58 + Math.sin(t*1.1 - 0.5)*0.04;
+handR.position.y = 0.65 + Math.sin(t*1.1 - 0.5)*0.04;
   charGroup.rotation.x=Math.sin(t*0.21)*0.01;
   renderer.render(scene,camera);
 }
