@@ -241,7 +241,12 @@ logo.addEventListener('animationend', () => {
 });
 
 // 버튼 나타난 후 펄스 시작
-setTimeout(() => startBtn.classList.add('ready'), 1700);
+setTimeout(() => {
+  startBtn.style.opacity = '1';
+  startBtn.style.transform = 'translateY(0)';
+  startBtn.style.animation = 'none';
+  startBtn.classList.add('ready');
+}, 1700);
 
 /* ── 시작 버튼 ── */
 startBtn.addEventListener('click', () => {
