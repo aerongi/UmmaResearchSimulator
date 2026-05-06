@@ -154,5 +154,15 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="js/parts.js"></script>
 <script src="js/game.js"></script>
+
+<audio id="bgm" src="assets/audio/daily.mp3" loop></audio>
+<script>
+  const bgm = document.getElementById('bgm');
+  bgm.volume = 0.3;
+  document.addEventListener('click', () => {
+    if (bgm.paused) bgm.play();
+  }, { once: true });
+</script>
+
 </body>
 </html>

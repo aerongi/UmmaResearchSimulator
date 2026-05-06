@@ -256,5 +256,14 @@ startBtn.addEventListener('click', () => {
 
 <div style="position:fixed;bottom:14px;right:18px;font-size:11px;color:rgba(255,255,255,0.7);letter-spacing:0.3px;z-index:20;">©팀 정해주세요</div>
 
+<audio id="bgm" src="assets/audio/title.mp3" loop></audio>
+<script>
+  const bgm = document.getElementById('bgm');
+  bgm.volume = 0.4;
+  document.addEventListener('click', () => {
+    if (bgm.paused) bgm.play();
+  }, { once: true });
+</script>
+
 </body>
 </html>
