@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>우리집</title>
+  <title>나의 공간</title>
   <link rel="stylesheet" href="css/style.css">
   <style>
     .proto-btns {
@@ -29,6 +29,99 @@
     #smile-btn:hover { background:#FFC400; }
     #speak-btn { background:#ffffff; color:#333; box-shadow:0 3px 10px rgba(0,0,0,0.12); }
     #speak-btn:hover { background:#f5f5f5; }
+
+/* ── 외출 버튼 ── */
+#outing-btn {
+  position: absolute;
+  top: 16px; right: 20px;
+  padding: 8px 20px;
+  border-radius: 20px;
+  border: 3px solid var(--outfit-color, #aaa);
+  background: rgba(255,255,255,0.85);
+  color: #555;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  transition: transform 0.1s;
+  z-index: 50;
+}
+#outing-btn:active { transform: scale(0.93); }
+
+/* ── 와이프 오버레이 ── */
+#wipe {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  transform: translateX(-100%);
+  pointer-events: none;
+}
+#wipe.wipe-in  { animation: wipe-in  0.28s ease-in  forwards; }
+#wipe.wipe-out { animation: wipe-out 0.28s ease-out forwards; }
+
+@keyframes wipe-in {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(0); }
+}
+@keyframes wipe-out {
+  from { transform: translateX(0); }
+  to   { transform: translateX(100%); }
+}
+
+/* ── 외출 선택 화면 ── */
+#outing-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 40px;
+}
+
+#outing-screen.visible { display: flex; }
+
+.location-btn {
+  padding: 22px 48px;
+  border-radius: 22px;
+  border: 4px solid;
+  background: rgba(255,255,255,0.82);
+  font-size: 22px;
+  font-weight: 800;
+  color: #7a6a58;
+  font-family: inherit;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  transition: transform 0.12s;
+  letter-spacing: 1px;
+}
+.location-btn:active { transform: scale(0.92); }
+
+#btn-outdoor { border-color: #87CEEB; }
+#btn-indoor  { border-color: #90EE90; }
+
+/* ── 뒤로가기 ── */
+#back-btn {
+  position: fixed;
+  bottom: 24px; left: 24px;
+  z-index: 91;
+  display: none;
+  padding: 10px 26px;
+  border-radius: 20px;
+  border: 3px solid rgba(255,255,255,0.6);
+  background: rgba(0,0,0,0.35);
+  color: white;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  transition: transform 0.1s;
+}
+#back-btn.visible { display: block; }
+#back-btn:active  { transform: scale(0.93); }
+
   </style>
 </head>
 <body>
@@ -38,6 +131,20 @@
   <div class="char-info">
     <div class="mbti-badge">—</div>
     <div class="mbti-name-sm"></div>
+	<button id="outing-btn">외출</button>
+
+<!-- 와이프 오버레이 -->
+<div id="wipe"></div>
+
+<!-- 외출 선택 화면 -->
+<div id="outing-screen">
+  <button class="location-btn" id="btn-outdoor">실외</button>
+  <button class="location-btn" id="btn-indoor">실내</button>
+</div>
+
+<!-- 뒤로가기 -->
+<button id="back-btn">← 뒤로가기</button>
+
   </div>
   <!-- 프로토타입 버튼들 -->
   <div class="proto-btns">

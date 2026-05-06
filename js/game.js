@@ -437,3 +437,60 @@ charGroup.position.y = walkBounce;
   renderer.render(scene,camera);
 }
 animate();
+
+/* ── 외출 시스템 ── */
+const wipe         = document.getElementById('wipe');
+const outingScreen = document.getElementById('outing-screen');
+const backBtn      = document.getElementById('back-btn');
+const outingBtn    = document.getElementById('outing-btn');
+
+// 의상 색에서 와이프 색 계산 (더 밝게)
+function lighten(hex, amt = 0.45) {
+  const n = parseInt(hex.replace('#',''), 16);
+  const r = Math.min(255, (n>>16) + Math.round(255*amt));
+  const g = Math.min(255, ((n>>8)&0xff) + Math.round(255*amt));
+  const b = Math.min(255, (n&0xff) + Math.round(255*amt));
+  return `rgb(${r},${g},${b})`;
+}
+
+const wipeColor = lighten(clothingHex);
+const bgColor   = lighten(clothingHex, 0.35);
+
+// 외출 버튼 테두리색 = 의상색
+outingBtn.style.setProperty('--outfit-color', clothingHex);
+outingBtn.style.borderColor = clothingHex;
+
+function doWipeIn(onMid) {
+  wipe.style.background = wipeColor;
+  wipe.className = '';
+  void wipe.offsetWidth; // reflow
+  wipe.classList.add('wipe-in');
+  wipe.style.pointerEvents = 'all';
+  setTimeout(() => {
+    onMid();
+    wipe.classList.remove('wipe-in');
+    wipe.classList.add('wipe-out');
+    setTimeout(() => {
+      wipe.style.pointerEvents = 'none';
+      wipe.className = '';
+      wipe.style.transform = 'translateX(-100%)';
+    }, 280);
+  }, 280);
+}
+
+// 외출 버튼 클릭
+outingBtn.addEventListener('click', () => {
+  doWipeIn(() => {
+    outingScreen.style.background = bgColor;
+    outingScreen.classList.add('visible');
+    backBtn.classList.add('visible');
+  });
+});
+
+// 뒤로가기
+backBtn.addEventListener('click', () => {
+  doWipeIn(() => {
+    outingScreen.classList.remove('visible');
+    backBtn.classList.remove('visible');
+  });
+});
