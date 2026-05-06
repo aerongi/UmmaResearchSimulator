@@ -155,14 +155,52 @@
 <script src="js/parts.js"></script>
 <script src="js/game.js"></script>
 
+<div id="intro-gate">
+  <div class="intro-text">엄마와의 일주일이 시작된다!</div>
+  <button id="intro-go-btn">GO! →</button>
+</div>
+<style>
+  #intro-gate {
+    position: fixed; inset: 0;
+    background: white;
+    z-index: 200;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 32px;
+    transition: opacity 0.5s;
+  }
+  #intro-gate.hidden { opacity: 0; pointer-events: none; }
+  .intro-text {
+    font-size: 26px;
+    font-weight: 800;
+    color: #444;
+    letter-spacing: 1px;
+  }
+  #intro-go-btn {
+    padding: 14px 42px;
+    border-radius: 30px;
+    border: 4px solid #7A5C3A;
+    background: #FFD700;
+    color: #7A5C3A;
+    font-size: 22px;
+    font-weight: 800;
+    font-family: inherit;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: transform 0.1s;
+  }
+  #intro-go-btn:active { transform: scale(0.94); }
+</style>
 <audio id="bgm" src="assets/audio/daily.mp3" loop></audio>
 <script>
   const bgm = document.getElementById('bgm');
+  const gate = document.getElementById('intro-gate');
   bgm.volume = 0.3;
-  document.addEventListener('click', () => {
-    if (bgm.paused) bgm.play();
+  document.getElementById('intro-go-btn').addEventListener('click', () => {
+    bgm.play();
+    gate.classList.add('hidden');
+    setTimeout(() => gate.remove(), 500);
   }, { once: true });
 </script>
-
 </body>
 </html>

@@ -254,14 +254,40 @@ startBtn.addEventListener('click', () => {
 });
 </script>
 
-<div style="position:fixed;bottom:14px;right:18px;font-size:11px;color:rgba(255,255,255,0.7);letter-spacing:0.3px;z-index:20;">©팀 정해주세요</div>
-
+<div id="click-gate">
+  <div class="click-text">Click!</div>
+</div>
+<style>
+  #click-gate {
+    position: fixed; inset: 0;
+    background: white;
+    z-index: 200;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: opacity 0.4s;
+  }
+  #click-gate.hidden { opacity: 0; pointer-events: none; }
+  .click-text {
+    font-size: 24px;
+    font-weight: 600;
+    color: #FF6EB4;
+    letter-spacing: 2px;
+    animation: click-pulse 1.2s ease-in-out infinite;
+  }
+  @keyframes click-pulse {
+    0%, 100% { opacity: 0.5; transform: scale(1); }
+    50%      { opacity: 1;   transform: scale(1.08); }
+  }
+</style>
 <audio id="bgm" src="assets/audio/title.mp3" loop></audio>
 <script>
   const bgm = document.getElementById('bgm');
+  const gate = document.getElementById('click-gate');
   bgm.volume = 0.4;
-  document.addEventListener('click', () => {
-    if (bgm.paused) bgm.play();
+  gate.addEventListener('click', () => {
+    bgm.play();
+    gate.classList.add('hidden');
+    setTimeout(() => gate.remove(), 400);
   }, { once: true });
 </script>
 
