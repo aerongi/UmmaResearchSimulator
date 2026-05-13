@@ -457,15 +457,46 @@ menuBackdrop.addEventListener('click', () => {
   menuBackdrop.classList.remove('visible');
 });
 
-// 볼륨 슬라이더 (BGM 연결)
-const volSlider = document.getElementById('vol-slider');
-const bgmEl = document.getElementById('bgm');
-if (bgmEl) {
+/* ── 아이템 목록 ── */
+const itemsPanel = document.getElementById('items-panel');
+document.querySelector('.menu-items-btn').addEventListener('click', () => {
+  const grid = document.getElementById('items-grid');
+  grid.innerHTML = '';
+  const owned = JSON.parse(localStorage.getItem('ownedItems') || '[]');
+  if (owned.length === 0) {
+    grid.innerHTML = '<div class="no-items">아직 아이템이 없어요</div>';
+  } else {
+    owned.forEach(name => {
+      const slot = document.createElement('div');
+      slot.className = 'item-slot';
+      slot.innerHTML = `<img src="assets/items/${name}.png" alt="${name}">`;
+      grid.appendChild(slot);
+    });
+  }
+  menuPanel.classList.remove('visible');
+  menuBackdrop.classList.remove('visible');
+  itemsPanel.classList.add('visible');
+  menuBackdrop.classList.add('visible');
+});
+document.getElementById('items-close').addEventListener('click', () => {
+  itemsPanel.classList.remove('visible');
+  menuBackdrop.classList.remove('visible');
+});
+// 백드롭 클릭 시 아이템 패널도 닫기
+menuBackdrop.addEventListener('click', () => {
+  itemsPanel.classList.remove('visible');
+});
+
+// 볼륨 슬라이더 (BGM 연결) - DOM 완전 로드 후 실행
+window.addEventListener('load', () => {
+  const volSlider = document.getElementById('vol-slider');
+  const bgmEl = document.getElementById('bgm');
+  if (!bgmEl || !volSlider) return;
   volSlider.value = Math.round(bgmEl.volume * 100);
   volSlider.addEventListener('input', e => {
     bgmEl.volume = e.target.value / 100;
   });
-}
+});
 
 // 의상 색에서 와이프 색 계산 (더 밝게)
 function lighten(hex, amt = 0.45) {
@@ -558,3 +589,29 @@ function loadEvent(name) {
 window.exitEvent = () => {
   document.getElementById('event-container').innerHTML = '';
 };
+
+/* ── 일자/시간 HUD ── */
+function ensureDayTimeEl() {
+  let el = document.getElementById('day-time');
+  if (el) return el;
+  el = document.createElement('div');
+  el.id = 'day-time';
+  el.style.cssText = `
+    position:absolute; top:20px; left:24px;
+    background:rgba(0,0,0,0.5); color:white;
+    padding:10px 22px; border-radius:22px;
+    font-size:16px; font-weight:800;
+    letter-spacing:1px; backdrop-filter:blur(8px);
+    z-index:50;
+  `;
+  document.getElementById('game-screen').appendChild(el);
+  return el;
+}
+window.refreshDayTime = function() {
+  const el = ensureDayTimeEl();
+  let dt;
+  try { dt = JSON.parse(localStorage.getItem('dayTime') || '{"day":1,"time":"morning"}'); }
+  catch(e) { dt = { day:1, time:'morning' }; }
+  el.textContent = `${dt.day}일차 - ${dt.time === 'morning' ? '오전' : '오후'}`;
+};
+window.refreshDayTime();
