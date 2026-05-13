@@ -637,8 +637,29 @@ window.refreshDayTime = function() {
 window.refreshDayTime();
 
 /* ── 일자/시간 HUD ── */
-function ensureDayTimeEl() { ... }
-window.refreshDayTime = function() { ... };
+function ensureDayTimeEl() {
+  let el = document.getElementById('day-time');
+  if (el) return el;
+  el = document.createElement('div');
+  el.id = 'day-time';
+  el.style.cssText = `
+    position:absolute; top:20px; left:24px;
+    background:rgba(0,0,0,0.5); color:white;
+    padding:10px 22px; border-radius:22px;
+    font-size:16px; font-weight:800;
+    letter-spacing:1px; backdrop-filter:blur(8px);
+    z-index:50;
+  `;
+  document.getElementById('game-screen').appendChild(el);
+  return el;
+}
+window.refreshDayTime = function() {
+  const el = ensureDayTimeEl();
+  let dt;
+  try { dt = JSON.parse(localStorage.getItem('dayTime') || '{"day":1,"time":"morning"}'); }
+  catch(e) { dt = { day:1, time:'morning' }; }
+  el.textContent = `${dt.day}일차 - ${dt.time === 'morning' ? '오전' : '오후'}`;
+};
 window.refreshDayTime();
 
 /* ── 들고 있는 아이템 ── */    // ← 여기에 추가
