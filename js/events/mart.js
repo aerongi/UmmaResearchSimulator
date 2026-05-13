@@ -425,9 +425,11 @@ function showItemReveal(itemName, description) {
   }
 
   /* ── 종료 ── */
-  function endEvent(item) {
-    if (item) localStorage.setItem('currentItem', item);
-    else      localStorage.removeItem('currentItem');
+ function endEvent(item) {
+incrementCount();
+
+  if (item) localStorage.setItem('currentItem', JSON.stringify({ name: item, source: 'mart' }));
+  else      localStorage.removeItem('currentItem');
 
     const dt = JSON.parse(localStorage.getItem('dayTime') || '{"day":1,"time":"morning"}');
     if (dt.time === 'morning') dt.time = 'afternoon';
@@ -651,7 +653,6 @@ function showItemReveal(itemName, description) {
 
   return {
     start() {
-      incrementCount();
       D = JSON.parse(localStorage.getItem('charData') || '{}');
       clothingHex = getClothingHex();
       currentExpression = 'default';
