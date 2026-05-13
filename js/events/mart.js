@@ -455,9 +455,18 @@ function showItemReveal(itemName, description) {
     if (document.getElementById('mart-style')) return;
     const s = document.createElement('style'); s.id = 'mart-style';
     s.textContent = `
-      #mart-scene { position: fixed; inset: 0; overflow: hidden; cursor: pointer; font-family: inherit; }
-	#mart-bg, #mart-char-3d {
-	  #mart-bg {
+#mart-scene { position: fixed; inset: 0; overflow: hidden; cursor: pointer; font-family: inherit; }
+
+      #mart-bg, #mart-char-3d {
+        opacity: 0;
+        transition: opacity 0.4s;
+      }
+      #mart-scene.scene-shown #mart-bg,
+      #mart-scene.scene-shown #mart-char-3d {
+        opacity: 1;
+      }
+
+      #mart-bg {
         position: absolute; inset: 0;
         background: linear-gradient(180deg,#f0e8d4 0%,#d8c8a0 100%);
         background-image: url('assets/bg/mart.png');
