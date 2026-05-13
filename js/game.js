@@ -1,5 +1,12 @@
 'use strict';
 
+/* ── 일시 상태 초기화 (저장 안 누르면 다음 로드 때 다 사라짐) ── */
+['dayTime', 'ownedItems', 'currentItem', 'eventCounts'].forEach(k => {
+  localStorage.removeItem(k);
+});
+Object.keys(localStorage).filter(k => k.startsWith('var_'))
+  .forEach(k => localStorage.removeItem(k));
+
 const charData = JSON.parse(localStorage.getItem('charData') || '{}');
 const D = Object.assign({
   skinColor:'skin_0', hairColor:'hc_0', eyeColor:'ec_0',
@@ -597,6 +604,10 @@ function loadEvent(name) {
 }
 window.exitEvent = () => {
   document.getElementById('event-container').innerHTML = '';
+  // 외출/야외 화면 다 닫기 → 게임 메인으로
+  document.getElementById('outing-screen').classList.remove('visible');
+  document.getElementById('outdoor-screen').classList.remove('visible');
+  document.getElementById('back-btn').classList.remove('visible');
 };
 
 /* ── 일자/시간 HUD ── */
