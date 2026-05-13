@@ -30,24 +30,6 @@
     #speak-btn { background:#ffffff; color:#333; box-shadow:0 3px 10px rgba(0,0,0,0.12); }
     #speak-btn:hover { background:#f5f5f5; }
 
-/* ── 외출 버튼 ── */
-#outing-btn {
-  position: absolute;
-  top: 16px; right: 20px;
-  padding: 8px 20px;
-  border-radius: 20px;
-  border: 3px solid var(--outfit-color, #aaa);
-  background: rgba(255,255,255,0.85);
-  color: #555;
-  font-size: 15px;
-  font-weight: 700;
-  font-family: inherit;
-  cursor: pointer;
-  backdrop-filter: blur(6px);
-  transition: transform 0.1s;
-  z-index: 50;
-}
-#outing-btn:active { transform: scale(0.93); }
 
 /* ── 와이프 오버레이 ── */
 #wipe {
@@ -100,27 +82,6 @@
 
 #btn-outdoor { border-color: #87CEEB; }
 #btn-indoor  { border-color: #90EE90; }
-
-/* ── 뒤로가기 ── */
-#back-btn {
-  position: fixed;
-  bottom: 24px; left: 24px;
-  z-index: 91;
-  display: none;
-  padding: 10px 26px;
-  border-radius: 20px;
-  border: 3px solid rgba(255,255,255,0.6);
-  background: rgba(0,0,0,0.35);
-  color: white;
-  font-size: 14px;
-  font-weight: 700;
-  font-family: inherit;
-  cursor: pointer;
-  backdrop-filter: blur(6px);
-  transition: transform 0.1s;
-}
-#back-btn.visible { display: block; }
-#back-btn:active  { transform: scale(0.93); }
 
 /* 일정 시작 버튼 - 더 크고 둥글고 볼드 */
 #outing-btn {
