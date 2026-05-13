@@ -348,13 +348,14 @@ window.event_mart = (() => {
   }
 
   /* ── 획득! 아이템 ── */
-  function showItemReveal(itemName, description) {
-    inReveal = true;
-    const owned = JSON.parse(localStorage.getItem('ownedItems') || '[]');
-    if (!owned.includes(itemName)) {
-      owned.push(itemName);
-      localStorage.setItem('ownedItems', JSON.stringify(owned));
-    }
+function showItemReveal(itemName, description) {
+  inReveal = true;
+  const owned = JSON.parse(localStorage.getItem('ownedItems') || '[]');
+  // 새 형식: { name, source } — 어느 이벤트에서 왔는지 같이 기록
+  if (!owned.find(it => it && it.name === itemName)) {
+    owned.push({ name: itemName, source: 'mart' });
+    localStorage.setItem('ownedItems', JSON.stringify(owned));
+  }
     const overlay = document.createElement('div');
     overlay.id = 'item-reveal';
     overlay.innerHTML = `
