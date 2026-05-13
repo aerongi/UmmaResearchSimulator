@@ -459,33 +459,39 @@ menuBackdrop.addEventListener('click', () => {
 
 /* ── 아이템 목록 ── */
 const itemsPanel = document.getElementById('items-panel');
-document.querySelector('.menu-items-btn').addEventListener('click', () => {
-  const grid = document.getElementById('items-grid');
-  grid.innerHTML = '';
-  const owned = JSON.parse(localStorage.getItem('ownedItems') || '[]');
-  if (owned.length === 0) {
-    grid.innerHTML = '<div class="no-items">아직 아이템이 없어요</div>';
-  } else {
-    owned.forEach(name => {
-      const slot = document.createElement('div');
-      slot.className = 'item-slot';
-      slot.innerHTML = `<img src="assets/items/${name}.png" alt="${name}">`;
-      grid.appendChild(slot);
-    });
-  }
-  menuPanel.classList.remove('visible');
-  menuBackdrop.classList.remove('visible');
-  itemsPanel.classList.add('visible');
-  menuBackdrop.classList.add('visible');
-});
-document.getElementById('items-close').addEventListener('click', () => {
-  itemsPanel.classList.remove('visible');
-  menuBackdrop.classList.remove('visible');
-});
-// 백드롭 클릭 시 아이템 패널도 닫기
-menuBackdrop.addEventListener('click', () => {
-  itemsPanel.classList.remove('visible');
-});
+const itemsBtn   = document.querySelector('.menu-items-btn');
+
+if (itemsBtn && itemsPanel) {
+  itemsBtn.addEventListener('click', () => {
+    const grid = document.getElementById('items-grid');
+    grid.innerHTML = '';
+    const owned  = JSON.parse(localStorage.getItem('ownedItems') || '[]');
+    const counts = JSON.parse(localStorage.getItem('eventCounts') || '{}');
+
+    // 실제로 본 적 있는 이벤트의 아이템만 표시 + 옛날 문자열 형식 무시
+    const valid = owned.filter(it =>
+      it && typeof it === 'object' && it.name && it.source && (counts[it.source] || 0) > 0
+    );
+
+    if (valid.length === 0) {
+      grid.innerHTML = '<div class="no-items">아직 아이템이 없어요</div>';
+    } else {
+      valid.forEach(it => {
+        const slot = document.createElement('div');
+        slot.className = 'item-slot';
+        slot.innerHTML = `<img src="assets/items/${it.name}.png" alt="${it.name}">`;
+        grid.appendChild(slot);
+      });
+    }
+    menuPanel.classList.remove('visible');
+    itemsPanel.classList.add('visible');
+  });
+
+  document.getElementById('items-close').addEventListener('click', () => {
+    itemsPanel.classList.remove('visible');
+    menuBackdrop.classList.remove('visible');
+  });
+}
 
 // 볼륨 슬라이더 (BGM 연결) - DOM 완전 로드 후 실행
 window.addEventListener('load', () => {
@@ -555,9 +561,12 @@ document.querySelectorAll('.outdoor-place').forEach(btn => {
   btn.addEventListener('click', () => {
     const place = btn.dataset.place;
     if (place === 'mart') {
-      doWipeIn(() => loadEvent('mart'));
+      doWipeIn(() => {
+        outdoorScreen.classList.remove('visible');   // ← 꼭 있어야 함
+        backBtn.classList.remove('visible');         // ← 꼭 있어야 함
+        loadEvent('mart');
+      });
     }
-    // 나머지는 미구현
   });
 });
 
