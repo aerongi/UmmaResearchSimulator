@@ -82,21 +82,6 @@
 
 #outing-screen.visible { display: flex; }
 
-<!-- 야외 장소 선택 -->
-<div id="outdoor-screen">
-  <div class="location-grid">
-    <button class="location-btn outdoor-place" data-place="restaurant">식당</button>
-    <button class="location-btn outdoor-place" data-place="mart">마트</button>
-    <button class="location-btn outdoor-place" data-place="dept">백화점</button>
-    <button class="location-btn outdoor-place" data-place="movie">영화관</button>
-    <button class="location-btn outdoor-place" data-place="street">거리</button>
-    <button class="location-btn outdoor-place" data-place="park">공원</button>
-  </div>
-</div>
-
-<!-- 이벤트 컨테이너 (동적 로드) -->
-<div id="event-container"></div>
-
 .location-btn {
   padding: 22px 48px;
   border-radius: 22px;
@@ -295,7 +280,7 @@
   z-index: 95;
   pointer-events: none;
 }
-#event-container > * { pointer-events: auto; }외
+#event-container > * { pointer-events: auto; }
 
   </style>
 </head>
@@ -338,8 +323,24 @@
   <button class="location-btn" id="btn-indoor">실내</button>
 </div>
 
+<!-- 야외 장소 선택 -->
+<div id="outdoor-screen">
+  <div class="location-grid">
+    <button class="location-btn outdoor-place" data-place="restaurant">식당</button>
+    <button class="location-btn outdoor-place" data-place="mart">마트</button>
+    <button class="location-btn outdoor-place" data-place="dept">백화점</button>
+    <button class="location-btn outdoor-place" data-place="movie">영화관</button>
+    <button class="location-btn outdoor-place" data-place="street">거리</button>
+    <button class="location-btn outdoor-place" data-place="park">공원</button>
+  </div>
+</div>
+
+<!-- 이벤트 컨테이너 (동적 로드) -->
+<div id="event-container"></div>
+
 <!-- 뒤로가기 -->
 <button id="back-btn">← 뒤로가기</button>
+
   <!-- 프로토타입 버튼들 -->
   <div class="proto-btns">
     <button id="speak-btn" class="proto-btn">💬 말하기</button>
