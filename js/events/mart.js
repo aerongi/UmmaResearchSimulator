@@ -459,14 +459,13 @@ incrementCount();
     s.textContent = `
 #mart-scene { position: fixed; inset: 0; overflow: hidden; cursor: pointer; font-family: inherit; }
 
-      #mart-bg, #mart-char-3d {
-        opacity: 0;
-        transition: opacity 0.4s;
-      }
-      #mart-scene.scene-shown #mart-bg,
-      #mart-scene.scene-shown #mart-char-3d {
-        opacity: 1;
-      }
+	#mart-char-3d {
+ 	 opacity: 0;
+ 	 transition: opacity 0.4s;
+	}
+	#mart-scene.scene-shown #mart-char-3d {
+	  opacity: 1;
+	}
 
       #mart-bg {
         position: absolute; inset: 0;
@@ -481,62 +480,67 @@ incrementCount();
         pointer-events: none;
       }
 
-      #dialog-box {
-        position: absolute; bottom: 28px; left: 50%;
-        transform: translateX(-50%);
-        width: 88%; max-width: 920px; min-height: 130px;
-        background: rgba(255,255,255,0.94);
-        border-radius: 38px;
-        padding: 28px 40px 24px;
-        box-shadow: 0 10px 28px rgba(0,0,0,0.2);
-        z-index: 10;
-        display: none;
-        flex-direction: column; justify-content: center;
-      }
-      #speaker-name {
-        position: absolute; top: -18px; left: 36px;
-        padding: 7px 24px; border-radius: 22px;
-        border: 3px solid #7a6a58; background: white;
-        font-size: 16px; font-weight: 800;
-        color: #444; letter-spacing: 0.5px;
-      }
-      #dialog-text {
-        font-size: 19px; font-weight: 500;
-        color: #333; line-height: 1.7;
-        min-height: 60px;
-      }
-      #dialog-arrow {
-        position: absolute; bottom: 14px; right: 28px;
-        font-size: 22px; color: #888;
-        animation: arrow-blink 0.9s infinite;
-        display: none;
-      }
+#dialog-box {
+  position: absolute; bottom: 100px; left: 50%;     /* ← bottom 28px → 100px */
+  transform: translateX(-50%);
+  width: 88%; max-width: 1000px; min-height: 160px;  /* max-width 약간 키움 */
+  background: rgba(255,255,255,0.94);
+  border-radius: 42px;
+  padding: 32px 48px 28px;                           /* 패딩 키움 */
+  box-shadow: 0 10px 28px rgba(0,0,0,0.2);
+  z-index: 10;
+  display: none;
+  flex-direction: column; justify-content: center;
+}
+#speaker-name {
+  position: absolute;
+  top: -22px; left: 40px;
+  padding: 9px 28px;
+  border-radius: 24px;
+  border: 3px solid #7a6a58; background: white;
+  font-size: 18px; font-weight: 800;                 /* ← 16 → 18 */
+  color: #444; letter-spacing: 0.5px;
+}
+#dialog-text {
+  font-size: 23px;                                   /* ← 19 → 23 */
+  font-weight: 500;
+  color: #333; line-height: 1.7;
+  min-height: 70px;
+}
+#dialog-arrow {
+  position: absolute;
+  bottom: 16px; right: 32px;
+  font-size: 26px; color: #888;                      /* ← 22 → 26 */
+  animation: arrow-blink 0.9s infinite;
+  display: none;
+}
       @keyframes arrow-blink {
         0%,50% { opacity: 1; transform: translateY(0); }
         51%,100% { opacity: 0.2; transform: translateY(3px); }
       }
 
-      #choice-overlay {
-        position: fixed; inset: 0;
-        background: rgba(0,0,0,0.4);
-        z-index: 15;
-        display: none;
-        align-items: center; justify-content: center;
-        padding-bottom: 220px;
-      }
-      #choice-list { display: flex; flex-direction: column; gap: 14px; }
-      .choice-btn {
-        padding: 16px 40px;
-        border-radius: 28px;
-        border: 3px solid #7a6a58;
-        background: rgba(255,255,255,0.96);
-        font-size: 18px; font-weight: 700;
-        font-family: inherit; color: #444;
-        cursor: pointer; min-width: 340px;
-        transition: transform 0.12s, background 0.15s;
-      }
-      .choice-btn:hover  { background: white; }
-      .choice-btn:active { transform: scale(0.96); }
+#choice-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 15;
+  display: none;
+  align-items: center; justify-content: center;
+  padding-bottom: 300px;                             /* ← 220 → 300 (텍스트박스 안 가리게) */
+}
+#choice-list { display: flex; flex-direction: column; gap: 18px; }   /* gap 14 → 18 */
+.choice-btn {
+  padding: 22px 56px;                                /* ← 16 40 → 22 56 */
+  border-radius: 32px;
+  border: 4px solid #7a6a58;                         /* ← 3px → 4px */
+  background: rgba(255,255,255,0.96);
+  font-size: 22px;                                   /* ← 18 → 22 */
+  font-weight: 700;
+  font-family: inherit; color: #444;
+  cursor: pointer; min-width: 440px;                 /* ← 340 → 440 */
+  transition: transform 0.12s, background 0.15s;
+}
+.choice-btn:hover  { background: white; }
+.choice-btn:active { transform: scale(0.96); }
 
       /* 이벤트 타이틀 */
       #title-overlay {
