@@ -681,7 +681,7 @@ window.refreshHeldItem = function() {
   const mat = new THREE.SpriteMaterial({ map: tex, transparent: true });
   heldItemSprite = new THREE.Sprite(mat);
   heldItemSprite.scale.set(0.56, 0.56, 1);
-  heldItemSprite.position.set(0, -25, 0.15);
+  heldItemSprite.position.set(0, 0.25, 0.15);
   handR.add(heldItemSprite);
 };
 window.refreshHeldItem();   // 초기 1회 호출
