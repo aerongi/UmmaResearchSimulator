@@ -635,3 +635,32 @@ window.refreshDayTime = function() {
   el.textContent = `${dt.day}일차 - ${dt.time === 'morning' ? '오전' : '오후'}`;
 };
 window.refreshDayTime();
+
+/* ── 일자/시간 HUD ── */
+function ensureDayTimeEl() { ... }
+window.refreshDayTime = function() { ... };
+window.refreshDayTime();
+
+/* ── 들고 있는 아이템 ── */    // ← 여기에 추가
+let heldItemSprite = null;
+window.refreshHeldItem = function() {
+  if (heldItemSprite) {
+    handR.remove(heldItemSprite);
+    heldItemSprite.material.map?.dispose();
+    heldItemSprite.material.dispose();
+    heldItemSprite = null;
+  }
+  const raw = localStorage.getItem('currentItem');
+  if (!raw) return;
+  let curr;
+  try { curr = JSON.parse(raw); } catch(e) { return; }
+  if (!curr || !curr.name) return;
+
+  const tex = new THREE.TextureLoader().load(`assets/items/${curr.name}.png`);
+  const mat = new THREE.SpriteMaterial({ map: tex, transparent: true });
+  heldItemSprite = new THREE.Sprite(mat);
+  heldItemSprite.scale.set(0.28, 0.28, 1);
+  heldItemSprite.position.set(0, -0.1, 0.15);
+  handR.add(heldItemSprite);
+};
+window.refreshHeldItem();   // 초기 1회 호출
