@@ -455,7 +455,8 @@ window.event_mart = (() => {
     const s = document.createElement('style'); s.id = 'mart-style';
     s.textContent = `
       #mart-scene { position: fixed; inset: 0; overflow: hidden; cursor: pointer; font-family: inherit; }
-      #mart-bg {
+	#mart-bg, #mart-char-3d {
+	  #mart-bg {
         position: absolute; inset: 0;
         background: linear-gradient(180deg,#f0e8d4 0%,#d8c8a0 100%);
         background-image: url('assets/bg/mart.png');
@@ -666,14 +667,15 @@ window.event_mart = (() => {
       animate();
 
       // 타이틀 → 걸어오기 → 대화 시작
-      showTitle(dialogues.title, () => {
-        startWalk(() => {
-          document.getElementById('dialog-box').style.display = 'flex';
-          dialogQueue = [...dialogues.main];
-          dialogIdx = 0;
-          nextLine();
-        });
-      });
+showTitle(dialogues.title, () => {
+  document.getElementById('mart-scene').classList.add('scene-shown');  // ← 추가
+  startWalk(() => {
+    document.getElementById('dialog-box').style.display = 'flex';
+    dialogQueue = [...dialogues.main];
+    dialogIdx = 0;
+    nextLine();
+  });
+});
 
       document.addEventListener('keydown', handleKey);
       document.getElementById('mart-scene').addEventListener('click', advance);
