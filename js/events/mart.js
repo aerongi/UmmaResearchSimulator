@@ -50,7 +50,6 @@ window.event_mart = (() => {
 
   /* ── 상태 ── */
   let D = {}, clothingHex = '#F5C842';
-  let charCanvas, charCtx;
   let mouthAnimTimer = null;
   let dialogQueue = [], dialogIdx = 0;
   let typingTimer = null, isTyping = false, waitingNext = false;
@@ -58,6 +57,9 @@ window.event_mart = (() => {
   let inChoice = false, inReveal = false, inTextInput = false, inTitle = false;
   let currentExpression = 'default';
   let titleDismissCallback = null;
+  let mart3D = null;
+  let walkState = null;
+  let rafId = null;
 
   function getClothingHex() {
     const item = FaceParts.CLOTHING_COLORS.find(c => c.id === D.clothingColor);
@@ -72,33 +74,100 @@ window.event_mart = (() => {
     return text.replace(/\{(\w+)\}/g, (m, key) =>
       localStorage.getItem('var_' + key) || '');
   }
-  function applyExpression(exp) {
-    if (exp) currentExpression = exp;
-  }
+  function applyExpression(exp) { if (exp) currentExpression = exp; }
   function getCurrentEyeOverride() {
-    if (currentExpression === 'smile') return 'eye_smile';
-    return D.eyeType || 'eye1';
+    return currentExpression === 'smile' ? 'eye_smile' : (D.eyeType || 'eye1');
   }
 
-  /* ── 캐릭터 그리기 ── */
-  async function drawCharacter(mouthType) {
-    const W = charCanvas.width, H = charCanvas.height;
-    charCtx.clearRect(0, 0, W, H);
-    const faceSize = Math.min(W, Math.floor(H * 0.55));
-    const faceX = (W - faceSize) / 2;
-    const tmp = document.createElement('canvas');
-    tmp.width = faceSize; tmp.height = faceSize;
-    await FaceParts.drawFaceWithOverrides(tmp.getContext('2d'), D, {
-      mouthType: mouthType || (D.mouthType || 'mouth1'),
+  /* ── 3D 캐릭터 셋업 ── */
+  function setup3D() {
+    const canvas = document.getElementById('mart-char-3d');
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
+    camera.position.set(0, 1.4, 4);
+    camera.lookAt(0, 1.0, 0);
+
+    scene.add(new THREE.AmbientLight(0xffffff, 1.0));
+    const sun = new THREE.DirectionalLight(0xffffff, 0.4);
+    sun.position.set(2, 5, 3);
+    scene.add(sun);
+
+    const charGroup = new THREE.Group();
+    scene.add(charGroup);
+
+    // 얼굴/뒷머리 텍스처
+    const faceCanvas = document.createElement('canvas');
+    faceCanvas.width = 512; faceCanvas.height = 512;
+    const faceTex = new THREE.CanvasTexture(faceCanvas);
+    faceTex.premultiplyAlpha = false;
+
+    const backHairCanvas = document.createElement('canvas');
+    backHairCanvas.width = 512; backHairCanvas.height = 512;
+    const backHairTex = new THREE.CanvasTexture(backHairCanvas);
+    backHairTex.premultiplyAlpha = false;
+
+    // 얼굴 plane
+    const headMat = new THREE.MeshBasicMaterial({
+      map: faceTex, transparent: true, alphaTest: 0.01,
+      side: THREE.FrontSide, depthWrite: true,
+    });
+    const headPlane = new THREE.Mesh(new THREE.PlaneGeometry(0.84, 0.84), headMat);
+    headPlane.position.set(0, 1.65, 0.04);
+    charGroup.add(headPlane);
+
+    // 뒷머리 plane
+    const backHairMat = new THREE.MeshBasicMaterial({
+      map: backHairTex, transparent: true, alphaTest: 0.01,
+      side: THREE.FrontSide, depthWrite: false,
+    });
+    const backHairPlane = new THREE.Mesh(new THREE.PlaneGeometry(0.90, 0.90), backHairMat);
+    backHairPlane.position.set(0, 1.65, -0.04);
+    backHairPlane.rotation.y = Math.PI;
+    charGroup.add(backHairPlane);
+
+    // 몸통 + 손
+    const clothingMat = new THREE.MeshStandardMaterial({ color: clothingHex, roughness: 0.7 });
+    const skinMat = new THREE.MeshStandardMaterial({ color: 0xFDDBB4, roughness: 0.65 });
+    function addPart(geo, mat, x, y, z) {
+      const m = new THREE.Mesh(geo, mat);
+      m.position.set(x, y, z);
+      charGroup.add(m);
+      return m;
+    }
+    addPart(new THREE.CylinderGeometry(0.16, 0.19, 0.62, 16), clothingMat, 0, 0.94, 0);
+    addPart(new THREE.SphereGeometry(0.19, 16, 8),            clothingMat, 0, 0.63, 0);
+    addPart(new THREE.SphereGeometry(0.11, 14, 10), skinMat, -0.42, 0.65, 0);
+    addPart(new THREE.SphereGeometry(0.11, 14, 10), skinMat,  0.42, 0.65, 0);
+
+    // 초기 얼굴 그리기
+    FaceParts.drawFace(faceCanvas.getContext('2d'), D).then(() => faceTex.needsUpdate = true);
+    FaceParts.drawBackHairTexture(backHairCanvas.getContext('2d'), D).then(() => backHairTex.needsUpdate = true);
+
+    function onResize() {
+      const w = canvas.clientWidth, h = canvas.clientHeight;
+      if (!w || !h) return;
+      renderer.setSize(w, h, false);
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+    }
+    onResize();
+    window.addEventListener('resize', onResize);
+
+    return { renderer, scene, camera, charGroup, faceCanvas, faceTex, onResize };
+  }
+
+  /* ── 얼굴 다시 그리기 (말하기/표정용) ── */
+  async function redrawFace(mouthOverride) {
+    if (!mart3D) return;
+    const ctx = mart3D.faceCanvas.getContext('2d');
+    await FaceParts.drawFaceWithOverrides(ctx, D, {
+      mouthType: mouthOverride || (D.mouthType || 'mouth1'),
       eyeType:   getCurrentEyeOverride(),
     });
-    charCtx.drawImage(tmp, faceX, 0);
-
-    const cx = W/2, bw = W*0.32, by = faceSize - 4, bh = H - by, br = bw/2;
-    charCtx.fillStyle = clothingHex;
-    charCtx.beginPath();
-    charCtx.roundRect(cx - bw/2, by, bw, bh, br);
-    charCtx.fill();
+    mart3D.faceTex.needsUpdate = true;
   }
 
   /* ── 입 움직임 ── */
@@ -107,13 +176,46 @@ window.event_mart = (() => {
     let open = false;
     mouthAnimTimer = setInterval(() => {
       open = !open;
-      drawCharacter(open ? 'mouth_open' : (D.mouthType || 'mouth1'));
+      redrawFace(open ? 'mouth_open' : (D.mouthType || 'mouth1'));
     }, 150);
   }
   function stopMouthAnim() {
     if (mouthAnimTimer) clearInterval(mouthAnimTimer);
     mouthAnimTimer = null;
-    drawCharacter(D.mouthType || 'mouth1');
+    redrawFace(D.mouthType || 'mouth1');
+  }
+
+  /* ── 걷기 (왼쪽 → 중앙, 뽀용뽀용) ── */
+  function startWalk(onDone) {
+    if (!mart3D) { onDone?.(); return; }
+    mart3D.charGroup.position.x = -4;
+    walkState = {
+      startTime: performance.now(),
+      duration: 2200,
+      fromX: -4,
+      toX: 0,
+      onDone,
+    };
+  }
+  function updateWalk(now) {
+    if (!walkState || !mart3D) return;
+    const elapsed = now - walkState.startTime;
+    const t = Math.min(1, elapsed / walkState.duration);
+    mart3D.charGroup.position.x = walkState.fromX + (walkState.toX - walkState.fromX) * t;
+    // 걷는동안 위아래 바운스
+    mart3D.charGroup.position.y = (t < 1) ? Math.abs(Math.sin(t * 22)) * 0.09 : 0;
+    if (t >= 1) {
+      const cb = walkState.onDone;
+      walkState = null;
+      cb?.();
+    }
+  }
+
+  /* ── 애니메이션 루프 ── */
+  function animate() {
+    rafId = requestAnimationFrame(animate);
+    updateWalk(performance.now());
+    if (mart3D) mart3D.renderer.render(mart3D.scene, mart3D.camera);
   }
 
   /* ── 타이핑 ── */
@@ -157,9 +259,7 @@ window.event_mart = (() => {
       box.textContent = '나';
     }
   }
-  function hideSpeaker() {
-    document.getElementById('speaker-name').style.display = 'none';
-  }
+  function hideSpeaker() { document.getElementById('speaker-name').style.display = 'none'; }
 
   /* ── 다음 라인 ── */
   function nextLine() {
@@ -176,7 +276,7 @@ window.event_mart = (() => {
 
     setupSpeaker(line.speaker);
     document.getElementById('dialog-arrow').style.display = 'none';
-    drawCharacter(D.mouthType || 'mouth1');
+    redrawFace(D.mouthType || 'mouth1');
     if (line.speaker === 'mom') startMouthAnim();
 
     typeText(interpolate(line.text), () => {
@@ -186,19 +286,17 @@ window.event_mart = (() => {
     });
   }
 
-  /* ── 나레이션 ── */
   function showNarration(text) {
     hideSpeaker();
     stopMouthAnim();
     document.getElementById('dialog-arrow').style.display = 'none';
-    drawCharacter(D.mouthType || 'mouth1');
+    redrawFace(D.mouthType || 'mouth1');
     typeText(interpolate(text), () => {
       waitingNext = true;
       document.getElementById('dialog-arrow').style.display = 'block';
     });
   }
 
-  /* ── 분기 (엄마 MBTI E/I) ── */
   function handleBranch(line) {
     const momMBTI = D.mbti || 'ENFP';
     let key;
@@ -249,7 +347,7 @@ window.event_mart = (() => {
     document.getElementById('choice-overlay').style.display = 'flex';
   }
 
-  /* ── 짜잔! 아이템 + 설명 박스 ── */
+  /* ── 획득! 아이템 ── */
   function showItemReveal(itemName, description) {
     inReveal = true;
     const owned = JSON.parse(localStorage.getItem('ownedItems') || '[]');
@@ -261,7 +359,7 @@ window.event_mart = (() => {
     overlay.id = 'item-reveal';
     overlay.innerHTML = `
       <div class="reveal-inner">
-        <div class="reveal-title">짜잔!</div>
+        <div class="reveal-title">획득!</div>
         <img src="assets/items/${itemName}.png" class="reveal-img">
         ${description ? `<div class="reveal-desc">${interpolate(description)}</div>` : ''}
         <div class="reveal-hint">클릭하거나 키를 눌러 계속</div>
@@ -325,21 +423,6 @@ window.event_mart = (() => {
     if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); advance(); }
   }
 
-  /* ── 캐릭터 걷기 ── */
-  function walkIn(onDone) {
-    const char = document.getElementById('mart-char');
-    char.style.left = '-25%';
-    char.classList.add('walking');
-    requestAnimationFrame(() => {
-      char.style.transition = 'left 2s ease-out';
-      char.style.left = '50%';
-    });
-    setTimeout(() => {
-      char.classList.remove('walking');
-      onDone();
-    }, 2000);
-  }
-
   /* ── 종료 ── */
   function endEvent(item) {
     if (item) localStorage.setItem('currentItem', item);
@@ -352,6 +435,13 @@ window.event_mart = (() => {
 
     stopMouthAnim();
     document.removeEventListener('keydown', handleKey);
+
+    if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+    if (mart3D) {
+      window.removeEventListener('resize', mart3D.onResize);
+      mart3D.renderer.dispose();
+      mart3D = null;
+    }
     const style = document.getElementById('mart-style'); if (style) style.remove();
     window.exitEvent();
 
@@ -371,17 +461,11 @@ window.event_mart = (() => {
         background-image: url('assets/bg/mart.png');
         background-size: cover; background-position: center;
       }
-      #mart-char {
-        position: absolute;
-        bottom: 24vh; left: -25%;
-        transform: translateX(-50%);
-        width: 280px; height: 420px;
+      #mart-char-3d {
+        position: absolute; inset: 0;
+        width: 100%; height: 100%;
         z-index: 5;
-      }
-      #mart-char.walking { animation: walk-bounce 0.45s linear infinite; }
-      @keyframes walk-bounce {
-        0%,100% { transform: translateX(-50%) translateY(0); }
-        50%     { transform: translateX(-50%) translateY(-10px); }
+        pointer-events: none;
       }
 
       #dialog-box {
@@ -397,12 +481,9 @@ window.event_mart = (() => {
         flex-direction: column; justify-content: center;
       }
       #speaker-name {
-        position: absolute;
-        top: -18px; left: 36px;
-        padding: 7px 24px;
-        border-radius: 22px;
-        border: 3px solid #7a6a58;
-        background: white;
+        position: absolute; top: -18px; left: 36px;
+        padding: 7px 24px; border-radius: 22px;
+        border: 3px solid #7a6a58; background: white;
         font-size: 16px; font-weight: 800;
         color: #444; letter-spacing: 0.5px;
       }
@@ -412,8 +493,7 @@ window.event_mart = (() => {
         min-height: 60px;
       }
       #dialog-arrow {
-        position: absolute;
-        bottom: 14px; right: 28px;
+        position: absolute; bottom: 14px; right: 28px;
         font-size: 22px; color: #888;
         animation: arrow-blink 0.9s infinite;
         display: none;
@@ -445,7 +525,7 @@ window.event_mart = (() => {
       .choice-btn:hover  { background: white; }
       .choice-btn:active { transform: scale(0.96); }
 
-      /* 이벤트 타이틀 (검정 60% + 흰 텍스트 페이드인) */
+      /* 이벤트 타이틀 */
       #title-overlay {
         position: fixed; inset: 0;
         background: rgba(0,0,0,0.6);
@@ -456,10 +536,8 @@ window.event_mart = (() => {
       }
       #title-overlay.show { opacity: 1; }
       .title-text {
-        font-size: 52px;
-        font-weight: 900;
-        color: white;
-        letter-spacing: 8px;
+        font-size: 52px; font-weight: 900;
+        color: white; letter-spacing: 8px;
         opacity: 0;
         animation: title-fadein 0.5s 0.2s forwards ease-out;
         text-shadow: 0 4px 20px rgba(0,0,0,0.5);
@@ -469,7 +547,7 @@ window.event_mart = (() => {
         to   { opacity: 1; transform: translateY(0); }
       }
 
-      /* 짜잔 아이템 + 설명 */
+      /* 획득 아이템 */
       #item-reveal {
         position: fixed; inset: 0;
         background: rgba(0,0,0,0.5);
@@ -501,15 +579,12 @@ window.event_mart = (() => {
       }
       .reveal-img { width: 200px; height: 200px; object-fit: contain; margin: 8px 0; }
       .reveal-desc {
-        margin-top: 14px;
-        padding: 14px 22px;
+        margin-top: 14px; padding: 14px 22px;
         border: 2.5px solid #7a6a58;
         border-radius: 18px;
         background: rgba(255,255,255,0.7);
-        font-size: 14px;
-        color: #444;
-        line-height: 1.55;
-        text-align: left;
+        font-size: 14px; color: #444;
+        line-height: 1.55; text-align: left;
       }
       .reveal-hint { font-size: 13px; color: #888; margin-top: 14px; }
 
@@ -550,8 +625,7 @@ window.event_mart = (() => {
         padding: 11px 22px;
         border-radius: 18px;
         border: none;
-        background: #FFD700;
-        color: white;
+        background: #FFD700; color: white;
         font-size: 15px; font-weight: 800;
         font-family: inherit; cursor: pointer;
         letter-spacing: 1px;
@@ -575,7 +649,7 @@ window.event_mart = (() => {
       container.innerHTML = `
         <div id="mart-scene">
           <div id="mart-bg"></div>
-          <canvas id="mart-char" width="280" height="420"></canvas>
+          <canvas id="mart-char-3d"></canvas>
           <div id="dialog-box">
             <div id="speaker-name">엄마</div>
             <div id="dialog-text"></div>
@@ -588,18 +662,16 @@ window.event_mart = (() => {
       `;
       injectStyle();
 
-      charCanvas = document.getElementById('mart-char');
-      charCtx = charCanvas.getContext('2d');
+      mart3D = setup3D();
+      animate();
 
-      drawCharacter(D.mouthType || 'mouth1').then(() => {
-        // 1. 이벤트 타이틀 → 2. 캐릭터 걸어옴 → 3. 대화 시작
-        showTitle(dialogues.title, () => {
-          walkIn(() => {
-            document.getElementById('dialog-box').style.display = 'flex';
-            dialogQueue = [...dialogues.main];
-            dialogIdx = 0;
-            nextLine();
-          });
+      // 타이틀 → 걸어오기 → 대화 시작
+      showTitle(dialogues.title, () => {
+        startWalk(() => {
+          document.getElementById('dialog-box').style.display = 'flex';
+          dialogQueue = [...dialogues.main];
+          dialogIdx = 0;
+          nextLine();
         });
       });
 
