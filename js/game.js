@@ -358,9 +358,6 @@ canvas.addEventListener('touchmove',e=>{
 },{passive:true});
 canvas.addEventListener('touchend',()=>dragging=false);
 
-/* ── HUD ────────────────────────────────────────────── */
-document.querySelector('.mbti-badge').textContent  =D.mbti    ||'??';
-document.querySelector('.mbti-name-sm').textContent=D.mbtiName||'';
 
 /* ── 성격별 행동 ─────────────────────────────────────── */
 const BEH={
@@ -441,8 +438,34 @@ animate();
 /* ── 외출 시스템 ── */
 const wipe         = document.getElementById('wipe');
 const outingScreen = document.getElementById('outing-screen');
+const outdoorScreen = document.getElementById('outdoor-screen');
 const backBtn      = document.getElementById('back-btn');
 const outingBtn    = document.getElementById('outing-btn');
+
+/* ── 메뉴 시스템 ── */
+const menuBtn       = document.getElementById('menu-btn');
+const menuPanel     = document.getElementById('menu-panel');
+const menuBackdrop  = document.getElementById('menu-backdrop');
+document.getElementById('menu-mbti-value').textContent = D.mbti || '??';
+
+menuBtn.addEventListener('click', () => {
+  menuPanel.classList.add('visible');
+  menuBackdrop.classList.add('visible');
+});
+menuBackdrop.addEventListener('click', () => {
+  menuPanel.classList.remove('visible');
+  menuBackdrop.classList.remove('visible');
+});
+
+// 볼륨 슬라이더 (BGM 연결)
+const volSlider = document.getElementById('vol-slider');
+const bgmEl = document.getElementById('bgm');
+if (bgmEl) {
+  volSlider.value = Math.round(bgmEl.volume * 100);
+  volSlider.addEventListener('input', e => {
+    bgmEl.volume = e.target.value / 100;
+  });
+}
 
 // 의상 색에서 와이프 색 계산 (더 밝게)
 function lighten(hex, amt = 0.45) {
@@ -478,7 +501,7 @@ function doWipeIn(onMid) {
   }, 280);
 }
 
-// 외출 버튼 클릭
+// 외출 버튼 클릭 → 외출 선택 (실외/실내)
 outingBtn.addEventListener('click', () => {
   doWipeIn(() => {
     outingScreen.style.background = bgColor;
@@ -487,10 +510,51 @@ outingBtn.addEventListener('click', () => {
   });
 });
 
-// 뒤로가기
-backBtn.addEventListener('click', () => {
+// 실외 → 야외 장소 6개
+document.getElementById('btn-outdoor').addEventListener('click', () => {
   doWipeIn(() => {
     outingScreen.classList.remove('visible');
-    backBtn.classList.remove('visible');
+    outdoorScreen.style.background = bgColor;
+    outdoorScreen.classList.add('visible');
   });
 });
+
+// 야외 장소 버튼들
+document.querySelectorAll('.outdoor-place').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const place = btn.dataset.place;
+    if (place === 'mart') {
+      doWipeIn(() => loadEvent('mart'));
+    }
+    // 나머지는 미구현
+  });
+});
+
+// 뒤로가기: 현재 어느 화면이냐에 따라 분기
+backBtn.addEventListener('click', () => {
+  doWipeIn(() => {
+    if (outdoorScreen.classList.contains('visible')) {
+      outdoorScreen.classList.remove('visible');
+      outingScreen.classList.add('visible');
+    } else if (outingScreen.classList.contains('visible')) {
+      outingScreen.classList.remove('visible');
+      backBtn.classList.remove('visible');
+    }
+  });
+});
+
+/* ── 동적 이벤트 로더 ── */
+const loadedEvents = {};
+function loadEvent(name) {
+  if (loadedEvents[name]) { loadedEvents[name].start(); return; }
+  const script = document.createElement('script');
+  script.src = `js/events/${name}.js`;
+  script.onload = () => {
+    loadedEvents[name] = window[`event_${name}`];
+    if (loadedEvents[name]) loadedEvents[name].start();
+  };
+  document.head.appendChild(script);
+}
+window.exitEvent = () => {
+  document.getElementById('event-container').innerHTML = '';
+};

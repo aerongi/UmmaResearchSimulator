@@ -82,6 +82,21 @@
 
 #outing-screen.visible { display: flex; }
 
+<!-- 야외 장소 선택 -->
+<div id="outdoor-screen">
+  <div class="location-grid">
+    <button class="location-btn outdoor-place" data-place="restaurant">식당</button>
+    <button class="location-btn outdoor-place" data-place="mart">마트</button>
+    <button class="location-btn outdoor-place" data-place="dept">백화점</button>
+    <button class="location-btn outdoor-place" data-place="movie">영화관</button>
+    <button class="location-btn outdoor-place" data-place="street">거리</button>
+    <button class="location-btn outdoor-place" data-place="park">공원</button>
+  </div>
+</div>
+
+<!-- 이벤트 컨테이너 (동적 로드) -->
+<div id="event-container"></div>
+
 .location-btn {
   padding: 22px 48px;
   border-radius: 22px;
@@ -122,17 +137,197 @@
 #back-btn.visible { display: block; }
 #back-btn:active  { transform: scale(0.93); }
 
+/* 일정 시작 버튼 - 더 크고 둥글고 볼드 */
+#outing-btn {
+  position: absolute;
+  top: 20px; right: 24px;
+  padding: 13px 30px;
+  border-radius: 30px;
+  border: 4px solid var(--outfit-color, #aaa);
+  background: rgba(255,255,255,0.9);
+  color: #555;
+  font-size: 18px;
+  font-weight: 900;
+  font-family: inherit;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  transition: transform 0.1s;
+  z-index: 50;
+}
+#outing-btn:active { transform: scale(0.93); }
+
+/* 메뉴 버튼 (투명) */
+#menu-btn {
+  position: absolute;
+  top: 78px; right: 24px;
+  padding: 8px 14px;
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.6);
+  transition: transform 0.1s;
+  z-index: 50;
+}
+#menu-btn:active { transform: scale(0.92); }
+
+/* 뒤로가기 버튼 - 일정 시작 자리로 이동 */
+#back-btn {
+  position: fixed;
+  top: 20px; right: 24px;
+  bottom: auto; left: auto;
+  z-index: 91;
+  display: none;
+  padding: 13px 30px;
+  border-radius: 30px;
+  border: 4px solid rgba(255,255,255,0.7);
+  background: rgba(0,0,0,0.35);
+  color: white;
+  font-size: 18px;
+  font-weight: 900;
+  font-family: inherit;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  transition: transform 0.1s;
+}
+#back-btn.visible { display: block; }
+#back-btn:active  { transform: scale(0.93); }
+
+/* ── 메뉴 백드롭 ── */
+#menu-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  z-index: 110;
+  display: none;
+}
+#menu-backdrop.visible { display: block; }
+
+/* ── 메뉴 패널 (파도치는 모서리) ── */
+#menu-panel {
+  position: fixed;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%) scale(0.92);
+  width: 340px;
+  padding: 28px 26px;
+  background: rgba(255,253,250,0.98);
+  border-radius: 38px 26px 38px 26px / 26px 38px 26px 38px;
+  box-shadow: 0 14px 44px rgba(0,0,0,0.28);
+  z-index: 120;
+  display: none;
+  flex-direction: column;
+  gap: 18px;
+  backdrop-filter: blur(10px);
+  opacity: 0;
+  transition: opacity 0.2s, transform 0.2s;
+}
+#menu-panel.visible {
+  display: flex;
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.menu-mbti-row {
+  font-size: 16px;
+  font-weight: 700;
+  color: #444;
+  padding-bottom: 14px;
+  border-bottom: 2px dashed rgba(0,0,0,0.12);
+  text-align: center;
+}
+#menu-mbti-value {
+  color: #007AFF;
+  font-weight: 800;
+  margin-left: 6px;
+  letter-spacing: 2px;
+}
+
+.menu-volume-row {
+  display: flex; align-items: center; gap: 12px;
+  font-size: 14px; color: #555;
+}
+.menu-volume-row label { font-weight: 600; min-width: 40px; }
+.menu-volume-row input[type="range"] { flex: 1; }
+
+.menu-save-btn {
+  padding: 10px 16px;
+  border-radius: 14px;
+  border: 2px solid #FFD700;
+  background: rgba(255,215,0,0.18);
+  color: #7a4800;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+.menu-save-btn:active { transform: scale(0.96); }
+
+.menu-check-row {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; color: #555; cursor: pointer;
+}
+
+#outdoor-screen {
+  position: fixed; inset: 0;
+  z-index: 90;
+  display: none;
+  align-items: center; justify-content: center;
+}
+#outdoor-screen.visible { display: flex; }
+
+.location-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 22px;
+}
+.outdoor-place { border-color: #87CEEB; }  /* 실외와 동일 하늘색 */
+
+#event-container {
+  position: fixed; inset: 0;
+  z-index: 95;
+  pointer-events: none;
+}
+#event-container > * { pointer-events: auto; }외
+
   </style>
 </head>
 <body>
 <div id="game-screen" class="screen">
   <canvas id="game-canvas" tabindex="0"></canvas>
   <div class="game-ui">마우스 드래그로 시점을 돌려 관찰하세요</div>
-  <div class="char-info">
-    <div class="mbti-badge">—</div>
-    <div class="mbti-name-sm"></div>
+<!-- 기존 외출 버튼 교체 -->
+<button id="outing-btn">일정 시작</button>
+
+<!-- 그 아래 메뉴 버튼 추가 -->
+<button id="menu-btn">
+  <svg width="20" height="16" viewBox="0 0 24 18" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none">
+    <line x1="2" y1="3"  x2="22" y2="3"/>
+    <line x1="2" y1="9"  x2="22" y2="9"/>
+    <line x1="2" y1="15" x2="22" y2="15"/>
+  </svg>
+  <span>메뉴</span>
+</button>
+
+<div id="menu-backdrop"></div>
+<div id="menu-panel">
+  <div class="menu-mbti-row">엄마 유형: <span id="menu-mbti-value">—</span></div>
+  <div class="menu-volume-row">
+    <label>볼륨</label>
+    <input type="range" id="vol-slider" min="0" max="100" value="30">
   </div>
-	<button id="outing-btn">외출</button>
+  <button class="menu-save-btn">💾 저장</button>
+  <label class="menu-check-row">
+    <input type="checkbox"> 온라인 통계 표시
+  </label>
+</div>
 
 <!-- 와이프 오버레이 -->
 <div id="wipe"></div>
