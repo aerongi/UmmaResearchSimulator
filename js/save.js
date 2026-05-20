@@ -72,7 +72,7 @@ buildSaveData() {
       }
     }
 // 새 게임 - 일시 상태 초기화
-['dayTime','ownedItems','currentItem','eventCounts','eventChoices','stats','playerName','momName'].forEach(k => localStorage.removeItem(k));
+['dayTime','ownedItems','currentItem','eventCounts','eventChoices','stats'].forEach(k => localStorage.removeItem(k));
 Object.keys(localStorage).filter(k => k.startsWith('var_')).forEach(k => localStorage.removeItem(k));
   },
 
