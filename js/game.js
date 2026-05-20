@@ -1,11 +1,7 @@
 'use strict';
 
-/* ── 일시 상태 초기화 (저장 안 누르면 다음 로드 때 다 사라짐) ── */
-['dayTime', 'ownedItems', 'currentItem', 'eventCounts'].forEach(k => {
-  localStorage.removeItem(k);
-});
-Object.keys(localStorage).filter(k => k.startsWith('var_'))
-  .forEach(k => localStorage.removeItem(k));
+SaveSystem.injectStyles();
+SaveSystem.applyStartup();
 
 const charData = JSON.parse(localStorage.getItem('charData') || '{}');
 const D = Object.assign({
@@ -500,6 +496,21 @@ if (itemsBtn && itemsPanel) {
   });
 }
 
+/* ── 저장 패널 ── */
+const savePanel = document.getElementById('save-panel');
+const saveBtn   = document.querySelector('.menu-save-btn');
+if (saveBtn && savePanel) {
+  saveBtn.addEventListener('click', () => {
+    SaveSystem.renderSlots(document.getElementById('save-slots'), 'save');
+    menuPanel.classList.remove('visible');
+    savePanel.classList.add('visible');
+  });
+  document.getElementById('save-close').addEventListener('click', () => {
+    savePanel.classList.remove('visible');
+    menuBackdrop.classList.remove('visible');
+  });
+}
+
 // 볼륨 슬라이더 (BGM 연결) - DOM 완전 로드 후 실행
 window.addEventListener('load', () => {
   const volSlider = document.getElementById('vol-slider');
@@ -593,6 +604,21 @@ backBtn.addEventListener('click', () => {
 /* ── 동적 이벤트 로더 ── */
 const loadedEvents = {};
 function loadEvent(name) {
+  // 일상 BGM 끄고 이벤트 BGM 켜기
+  const bgm = document.getElementById('bgm');
+  if (bgm) bgm.pause();
+  let evBgm = document.getElementById('event-bgm');
+  if (!evBgm) {
+    evBgm = document.createElement('audio');
+    evBgm.id = 'event-bgm';
+    evBgm.src = 'assets/audio/event1.mp3';
+    evBgm.loop = true;
+    document.body.appendChild(evBgm);
+  }
+  evBgm.volume = bgm ? bgm.volume : 0.3;
+  evBgm.currentTime = 0;
+  evBgm.play().catch(()=>{});
+
   if (loadedEvents[name]) { loadedEvents[name].start(); return; }
   const script = document.createElement('script');
   script.src = `js/events/${name}.js`;
@@ -604,7 +630,12 @@ function loadEvent(name) {
 }
 window.exitEvent = () => {
   document.getElementById('event-container').innerHTML = '';
-  // 외출/야외 화면 다 닫기 → 게임 메인으로
+  // 이벤트 BGM 끄고 일상 BGM 복귀
+  const evBgm = document.getElementById('event-bgm');
+  if (evBgm) evBgm.pause();
+  const bgm = document.getElementById('bgm');
+  if (bgm) bgm.play().catch(()=>{});
+  // 외출 화면들 닫기
   document.getElementById('outing-screen').classList.remove('visible');
   document.getElementById('outdoor-screen').classList.remove('visible');
   document.getElementById('back-btn').classList.remove('visible');

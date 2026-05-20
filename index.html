@@ -117,6 +117,13 @@
 <div id="content">
   <img id="logo" src="assets/title-logo.png" alt="두근두근 엄마연구 시뮬레이터">
   <button id="start-btn">게임 시작!</button>
+
+<button id="load-btn" style="display:none;">불러오기</button>
+
+<div id="load-panel">
+  <div class="save-header">불러오기</div>
+  <div class="save-slots" id="load-slots"></div>
+  <button class="save-close" id="load-close">닫기</button>
 </div>
 
 <script>
@@ -290,6 +297,22 @@ startBtn.addEventListener('click', () => {
     setTimeout(() => gate.remove(), 400);
   }, { once: true });
 </script>
+
+  <script src="js/parts.js"></script>
+  <script src="js/save.js"></script>
+  <script>
+    SaveSystem.injectStyles();
+    const loadBtn   = document.getElementById('load-btn');
+    const loadPanel = document.getElementById('load-panel');
+    if (SaveSystem.hasSomeSave()) loadBtn.style.display = 'block';
+    loadBtn.addEventListener('click', () => {
+      SaveSystem.renderSlots(document.getElementById('load-slots'), 'load');
+      loadPanel.classList.add('visible');
+    });
+    document.getElementById('load-close').addEventListener('click', () => {
+      loadPanel.classList.remove('visible');
+    });
+  </script>
 
 </body>
 </html>

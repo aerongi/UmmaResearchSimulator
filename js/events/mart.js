@@ -337,6 +337,11 @@ window.event_mart = (() => {
       btn.addEventListener('click', e => {
         e.stopPropagation();
         inChoice = false;
+ // 선택지 기록 (통계용)
+  const choices = JSON.parse(localStorage.getItem('eventChoices') || '{}');
+  choices.mart = opt.route;
+  localStorage.setItem('eventChoices', JSON.stringify(choices));
+
         document.getElementById('choice-overlay').style.display = 'none';
         dialogQueue = [...dialogues[opt.route]];
         dialogIdx = 0;
