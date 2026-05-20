@@ -482,11 +482,9 @@ window.EventEngine = (() => {
       .input-suffix { font-size: 18px; font-weight: 700; color: #888; }
       .confirm-btn { padding: 11px 22px; border-radius: 18px; border: none; background: #FFD700; color: white; font-size: 15px; font-weight: 800; font-family: inherit; cursor: pointer; letter-spacing: 1px; box-shadow: 0 3px 0 #B8960A; transition: transform 0.1s, box-shadow 0.1s; }
       .confirm-btn:hover { background: #FFC400; }
-      .confirm-btn:active { transform: translateY(3px); box-shadow: 0 0 0 #B8960A; }
-    `;
-    document.head.appendChild(s);
+    .confirm-btn:active { transform: translateY(3px); box-shadow: 0 0 0 #B8960A; }
 
-.event-prop {
+      .event-prop {
         position: absolute; top: 38%; left: 50%;
         transform: translate(-50%, -50%);
         max-width: 42vh; max-height: 42vh;
@@ -500,6 +498,8 @@ window.EventEngine = (() => {
       /* 컷씬 모드: 캐릭터/NPC 숨김 */
       #event-scene.cutscene #event-char-3d { opacity: 0 !important; }
       #event-scene.cutscene .event-npc      { opacity: 0 !important; transition: opacity 0.45s; }
+    `;
+    document.head.appendChild(s);
   }
 
   function create(config) {
