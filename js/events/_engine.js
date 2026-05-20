@@ -141,6 +141,31 @@ window.EventEngine = (() => {
     setTimeout(() => nextLine(), 750);
   }
 
+/* ── 컷씬 소품 (획득X, 연출용) ── */
+  function propShow(name) {
+    const scene = document.getElementById('event-scene');
+    scene.classList.add('cutscene');                 // 캐릭터/NPC 숨김
+    let prop = document.getElementById('event-prop');
+    if (!prop) {
+      prop = document.createElement('img');
+      prop.id = 'event-prop';
+      prop.className = 'event-prop';
+      scene.appendChild(prop);
+    }
+    prop.src = name.includes('/') ? name : `assets/props/${name}.png`;
+    prop.classList.remove('shown');
+    void prop.offsetWidth;                            // 애니메이션 리셋
+    prop.classList.add('shown');
+    setTimeout(() => nextLine(), 500);                // 페이드 끝나면 대화 계속
+  }
+  function propHide() {
+    const scene = document.getElementById('event-scene');
+    const prop = document.getElementById('event-prop');
+    if (prop) prop.classList.remove('shown');
+    scene.classList.remove('cutscene');               // 캐릭터 복귀
+    setTimeout(() => nextLine(), 500);
+  }
+
   /* ── 타이핑 ── */
   function typeText(text, onDone) {
     const el = document.getElementById('dialog-text');
@@ -196,6 +221,8 @@ window.EventEngine = (() => {
     if (line.branch)     { handleBranch(line); return; }
     if (line.npcEnter)   { npcEnter(line.npcEnter); return; }
     if (line.npcExit)    { npcExit(); return; }
+    if (line.propShow)   { propShow(line.propShow); return; }
+    if (line.propExit)   { propHide(); return; }
     if (line.narration)  { showNarration(line.narration); return; }
 
     setupSpeaker(line.speaker);
@@ -458,6 +485,21 @@ window.EventEngine = (() => {
       .confirm-btn:active { transform: translateY(3px); box-shadow: 0 0 0 #B8960A; }
     `;
     document.head.appendChild(s);
+
+.event-prop {
+        position: absolute; top: 38%; left: 50%;
+        transform: translate(-50%, -50%);
+        max-width: 42vh; max-height: 42vh;
+        opacity: 0; z-index: 8; pointer-events: none;
+        transition: opacity 0.45s;
+        filter: drop-shadow(0 10px 24px rgba(0,0,0,0.35));
+      }
+      .event-prop.shown { opacity: 1; animation: prop-float 3s ease-in-out infinite; }
+      @keyframes prop-float { 0%,100% { top: 38%; } 50% { top: 34%; } }
+
+      /* 컷씬 모드: 캐릭터/NPC 숨김 */
+      #event-scene.cutscene #event-char-3d { opacity: 0 !important; }
+      #event-scene.cutscene .event-npc      { opacity: 0 !important; transition: opacity 0.45s; }
   }
 
   function create(config) {
