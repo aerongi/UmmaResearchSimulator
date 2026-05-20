@@ -397,6 +397,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="js/parts.js"></script>
 <script src="js/save.js"></script>
+<script src="js/events/_engine.js"></script>
 <script src="js/game.js"></script>
 
 <div id="intro-gate">
@@ -446,5 +447,69 @@
     setTimeout(() => gate.remove(), 500);
   }, { once: true });
 </script>
+
+<!-- ▼▼▼ 개발용 디버그 패널 (임시 - 배포 전 이 블록 통째로 삭제) ▼▼▼ -->
+<script>
+(function () {
+  // 버튼
+  const btn = document.createElement('button');
+  btn.textContent = 'DEV';
+  btn.style.cssText = `
+    position:fixed; bottom:14px; left:14px; z-index:9999;
+    padding:8px 14px; border-radius:10px; border:none;
+    background:#222; color:#0f0; font-family:monospace;
+    font-size:13px; font-weight:700; cursor:pointer; opacity:0.75;
+  `;
+  document.body.appendChild(btn);
+
+  // 패널
+  const panel = document.createElement('div');
+  panel.style.cssText = `
+    position:fixed; inset:0; z-index:9998; display:none;
+    background:rgba(0,0,0,0.85); padding:40px; overflow:auto;
+    font-family:monospace; font-size:13px; color:#ddd;
+  `;
+  document.body.appendChild(panel);
+
+  function render() {
+    const keys = Object.keys(localStorage).sort();
+    let html = `
+      <div style="display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;">
+        <button id="dev-close" style="padding:8px 16px;border:none;border-radius:8px;background:#555;color:#fff;font-family:monospace;cursor:pointer;">닫기</button>
+        <button id="dev-copy" style="padding:8px 16px;border:none;border-radius:8px;background:#3a6;color:#fff;font-family:monospace;cursor:pointer;">전체 복사</button>
+        <button id="dev-clear" style="padding:8px 16px;border:none;border-radius:8px;background:#a33;color:#fff;font-family:monospace;cursor:pointer;">전체 삭제</button>
+        <span style="align-self:center;color:#888;">총 ${keys.length}개 키</span>
+      </div>`;
+    let raw = '';
+    keys.forEach(k => {
+      let v = localStorage.getItem(k);
+      let pretty = v;
+      try { pretty = JSON.stringify(JSON.parse(v), null, 2); } catch (e) {}
+      raw += `${k} = ${v}\n`;
+      html += `
+        <div style="margin-bottom:14px;border-left:3px solid #0a0;padding-left:12px;">
+          <div style="color:#0f0;font-weight:700;margin-bottom:4px;">${k}</div>
+          <pre style="margin:0;white-space:pre-wrap;word-break:break-all;color:#ccc;">${pretty.replace(/</g,'&lt;')}</pre>
+        </div>`;
+    });
+    if (!keys.length) html += '<div style="color:#888;">저장된 내용 없음</div>';
+    panel.innerHTML = html;
+
+    panel.querySelector('#dev-close').onclick = () => { panel.style.display = 'none'; };
+    panel.querySelector('#dev-copy').onclick = () => {
+      navigator.clipboard.writeText(raw).then(() => alert('복사됨!'));
+    };
+    panel.querySelector('#dev-clear').onclick = () => {
+      if (confirm('localStorage 전체를 삭제할까요? (저장 슬롯 포함)')) {
+        localStorage.clear(); render();
+      }
+    };
+  }
+
+  btn.onclick = () => { render(); panel.style.display = 'block'; };
+})();
+</script>
+<!-- ▲▲▲ 개발용 디버그 패널 끝 ▲▲▲ -->
+
 </body>
 </html>

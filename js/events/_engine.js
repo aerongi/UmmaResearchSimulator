@@ -221,6 +221,9 @@ window.EventEngine = (() => {
     const mbti = D.mbti || 'ENFP';
     let key;
     if (line.branch === 'momEI') key = mbti[0];
+  if (line.branch === 'momSN') key = mbti[1];
+  if (line.branch === 'momTF') key = mbti[2];
+  if (line.branch === 'momJP') key = mbti[3]; 
     const sub = (line.cases && line.cases[key]) || [];
     dialogQueue.splice(dialogIdx, 0, ...sub);
     nextLine();
