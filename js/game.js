@@ -578,13 +578,18 @@ document.getElementById('btn-outdoor').addEventListener('click', () => {
 document.querySelectorAll('.outdoor-place').forEach(btn => {
   btn.addEventListener('click', () => {
     const place = btn.dataset.place;
-    if (place === 'mart') {
-      doWipeIn(() => {
-        outdoorScreen.classList.remove('visible');   // ← 꼭 있어야 함
-        backBtn.classList.remove('visible');         // ← 꼭 있어야 함
-        loadEvent('mart');
-      });
-    }
+    const eventMap = {
+      restaurant: 'restaurant',
+      mart: 'mart',
+      // dept: 'dept', movie: 'movie', street: 'street', park: 'park',  // 만들면 주석 해제
+    };
+    const ev = eventMap[place];
+    if (!ev) return;                       // 아직 안 만든 장소는 무시
+    doWipeIn(() => {
+      outdoorScreen.classList.remove('visible');
+      backBtn.classList.remove('visible');
+      loadEvent(ev);
+    });
   });
 });
 
