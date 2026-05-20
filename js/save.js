@@ -19,8 +19,9 @@ buildSaveData() {
   });
   return {
     charData:     JSON.parse(localStorage.getItem('charData') || '{}'),
-    playerName:   localStorage.getItem('playerName') || '',   // ← 추가
-    momName:      localStorage.getItem('momName') || '',      // ← 추가
+    playerName:   localStorage.getItem('playerName') || '',
+    momName:      localStorage.getItem('momName') || '',
+    childType:    localStorage.getItem('childType') || '',
     dayTime:      JSON.parse(localStorage.getItem('dayTime') || '{"day":1,"time":"morning"}'),
     ownedItems:   JSON.parse(localStorage.getItem('ownedItems') || '[]'),
     currentItem:  JSON.parse(localStorage.getItem('currentItem') || 'null'),
@@ -132,9 +133,13 @@ Object.keys(localStorage).filter(k => k.startsWith('var_')).forEach(k => localSt
       const slot = document.createElement('div');
       slot.className = 'save-slot';
       if (d) {
+	const childLabel = d.childType === 'son' ? '아들' : '딸';
         slot.innerHTML = `
           <canvas class="slot-thumb" width="56" height="56"></canvas>
-          <span class="slot-label">${this.slotLabel(d)}</span>
+          <div class="slot-info">
+            <span class="slot-names">${d.momName || '엄마'} 엄마 · ${childLabel} ${d.playerName || '나'}</span>
+            <span class="slot-day">${this.slotLabel(d)}</span>
+          </div>
           <button class="slot-load">불러오기</button>`;
         this.drawThumb(slot.querySelector('.slot-thumb'), d.charData);
         slot.querySelector('.slot-load').addEventListener('click', (e) => {
@@ -215,6 +220,9 @@ Object.keys(localStorage).filter(k => k.startsWith('var_')).forEach(k => localSt
       }
       .slot-thumb.empty { background: #ccc; }
       .slot-label { font-size: 15px; font-weight: 700; color: #444; }
+	.slot-info { display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 0; padding-right: 70px; }
+      .slot-names { font-size: 15px; font-weight: 800; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .slot-day { font-size: 12.5px; font-weight: 600; color: #999; }
       .slot-label.empty { color: #999; }
       .slot-load {
         position: absolute; top: 8px; right: 10px;
