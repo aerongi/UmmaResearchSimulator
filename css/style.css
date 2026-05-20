@@ -536,6 +536,16 @@ html, body {
   z-index: 3;
   display: flex; flex-direction: column; justify-content: center;
 }
+#intro-speaker {
+  position: absolute;
+  top: -2.2vh; left: 4vw;
+  padding: 1vh 3vw;
+  border-radius: 2.5vh;
+  border: 0.4vh solid #9a86c4;
+  background: white;
+  font-size: 2.2vh; font-weight: 800;
+  color: #5a4a7a;
+}
 #intro-dialog-text {
   font-size: 2.5vh; font-weight: 600;
   color: #333; line-height: 1.7;

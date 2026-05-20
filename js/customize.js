@@ -118,13 +118,14 @@ function showIntroInput(cfg) {
 function fadeToCustomize() {
   const intro = document.getElementById('intro-screen');
   intro.classList.add('fade-out');
-  setTimeout(() => intro.classList.add('hidden'), 800);
+  setTimeout(() => { intro.style.display = 'none'; }, 800);
 }
 
 /* 아웃트로 시작 (커마 완료 후 박사 재등장) */
 function showOutro() {
   const intro = document.getElementById('intro-screen');
   intro.classList.remove('hidden', 'fade-out');
+  intro.style.display = 'flex';
   intro.style.opacity = '0';
   requestAnimationFrame(() => {
     intro.style.transition = 'opacity 0.8s';
@@ -440,6 +441,6 @@ function showResult() {
   document.getElementById('result-screen').classList.remove('hidden');
   document.getElementById('next-btn').addEventListener('click', () => {
     localStorage.setItem('charData', JSON.stringify({ ...state, mbti, mbtiName: data.name }));
-    howOutro();
+    showOutro();
   }, { once: true });
 }

@@ -13,6 +13,7 @@
   <div id="intro-bg"></div>
   <img id="doctor-npc" src="assets/npc/doctor.png" alt="박사">
   <div id="intro-dialog-box">
+	<div id="intro-speaker">엄박사</div>
     <div id="intro-dialog-text"></div>
     <div id="intro-dialog-arrow">▼</div>
   </div>
@@ -100,5 +101,15 @@
 </div>
 <script src="js/parts.js"></script>
 <script src="js/customize.js"></script>
+
+<audio id="bgm" src="assets/audio/intro.mp3" loop></audio>
+<script>
+  const bgm = document.getElementById('bgm');
+  bgm.volume = 0.4;
+  document.addEventListener('click', () => {
+    if (bgm.paused) bgm.play();
+  }, { once: true });
+</script>
+
 </body>
 </html>
