@@ -72,8 +72,10 @@ buildSaveData() {
       }
     }
 // 새 게임 - 일시 상태 초기화
-['dayTime','ownedItems','currentItem','eventCounts','eventChoices','stats'].forEach(k => localStorage.removeItem(k));
+['dayTime','ownedItems','currentItem','eventCounts','eventChoices'].forEach(k => localStorage.removeItem(k));
 Object.keys(localStorage).filter(k => k.startsWith('var_')).forEach(k => localStorage.removeItem(k));
+const cd = JSON.parse(localStorage.getItem('charData') || '{}');
+localStorage.setItem('stats', JSON.stringify(cd.initialStats || DEFAULT_STATS));
   },
 
   /* 슬롯 썸네일에 엄마 얼굴 */

@@ -431,6 +431,26 @@ function computeMBTI() {
   return (sc.EI>=0?'E':'I') + (sc.SN>=0?'N':'S') + (sc.TF>=0?'F':'T') + (sc.JP>=0?'P':'J');
 }
 
+function computeInitialStats() {
+	const stats = {
+		외향성: 0, 내향성: 0, 감각: 0, 직관: 0,
+		논리성: 0, 감정성: 0, 계획성: 0, 융통성: 0, 애정: 0,
+	};
+	// 칸 1~6: 높을수록 오른쪽(E/N/F/P), 낮을수록 왼쪽(I/S/T/J)
+	const map = [
+		{ high: '외향성', low: '내향성' },  // Q1 (E/I)
+		{ high: '직관',   low: '감각'   },  // Q2 (N/S)
+		{ high: '감정성', low: '논리성' },  // Q3 (F/T)
+		{ high: '융통성', low: '계획성' },  // Q4 (P/J)
+	];
+	map.forEach((m, i) => {
+		const v = state.personality[`q${i}`] || 3;  // 선택한 칸 (1~6)
+		if (v >= 4) stats[m.high] += v - 3;   // 4→1, 5→2, 6→3
+		else        stats[m.low]  += 4 - v;   // 3→1, 2→2, 1→3
+	});
+	return stats;
+}
+
 function showResult() {
   const mbti = computeMBTI();
   const data = MBTI_DATA[mbti] || { name:'독특한 유형', desc:'세상에 하나뿐인 특별한 성격입니다.' };
@@ -439,8 +459,9 @@ function showResult() {
   document.getElementById('mbti-desc-display').textContent  = data.desc;
   document.getElementById('customize-screen').classList.add('hidden');
   document.getElementById('result-screen').classList.remove('hidden');
-  document.getElementById('next-btn').addEventListener('click', () => {
-    localStorage.setItem('charData', JSON.stringify({ ...state, mbti, mbtiName: data.name }));
-    showOutro();
-  }, { once: true });
+document.getElementById('next-btn').addEventListener('click', () => {
+		const initialStats = computeInitialStats();
+		localStorage.setItem('charData', JSON.stringify({ ...state, mbti, mbtiName: data.name, initialStats }));
+		showOutro();
+	}, { once: true });
 }
