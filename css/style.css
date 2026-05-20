@@ -4,7 +4,7 @@ html, body {
   width: 100%;
   height: 100%;
   font-family: -apple-system, BlinkMacSystemFont, 'Noto Sans KR', 'Segoe UI', sans-serif;
-  background: #f2f2f2;
+  background: #EDE4D3;
   color: #2A2A2A;
   overflow: hidden;
   -webkit-font-smoothing: antialiased;
@@ -19,7 +19,7 @@ html, body {
 #customize-screen {
   display: flex;
   flex-direction: column;
-  background: #f2f2f2;
+  background: #EDE4D3;
 }
 
 /* ── 상단 헤더 ── */
@@ -49,26 +49,23 @@ html, body {
 }
 
 /* ── 왼쪽: 미리보기 ── */
-/* preview-panel: 45%로 확대 */
 .preview-panel {
-  flex: 0 0 45%;
+  flex: 0 0 42%;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px 14px 20px 20px;
-  border-right: 1px solid rgba(0,0,0,0.12);
+  position: relative;
 }
 
-/* preview-aspect: padding-top 비율 고정 방식으로 교체 */
 .preview-aspect {
   width: 100%;
-  max-width: 360px;
+  max-width: 380px;
   position: relative;
 }
 .preview-aspect::before {
   content: '';
   display: block;
-  padding-top: 138.9%;   /* 500/360 × 100% */
+  padding-top: 138.9%; /* 500/360 */
 }
 #preview-canvas {
   position: absolute;
@@ -183,7 +180,7 @@ html, body {
 .part-item {
   aspect-ratio: 1;
   border: 1.5px solid rgba(0,0,0,0.1);
-  border-radius: 16%;
+  border-radius: 50%;
   background: white;
   cursor: pointer;
   display: flex;
@@ -363,7 +360,7 @@ html, body {
    결과 화면
 ═══════════════════════════════════════════ */
 #result-screen {
-  background: #f2f2f2;
+  background: #EDE4D3;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -489,3 +486,114 @@ html, body {
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.28); }
+
+#intro-screen {
+  position: fixed; inset: 0;
+  z-index: 300;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden; cursor: pointer;
+  transition: opacity 0.8s;
+}
+#intro-screen.fade-out { opacity: 0; pointer-events: none; }
+#intro-screen.hidden   { display: none; }
+
+#intro-bg {
+  position: absolute; inset: 0;
+  background: #ffffff;
+  transition: background 2s;
+}
+#intro-bg.cycling { animation: pastel-cycle 45s linear infinite; }
+@keyframes pastel-cycle {
+  0%   { background: #ffe0ec; }  /* 연분홍 */
+  16%  { background: #ffe8d6; }  /* 살구 */
+  33%  { background: #fdf6d3; }  /* 노랑 */
+  50%  { background: #dcf5e3; }  /* 연두 */
+  66%  { background: #d9eefb; }  /* 하늘 */
+  83%  { background: #e8ddf7; }  /* 보라 */
+  100% { background: #ffe0ec; }
+}
+
+#doctor-npc {
+  position: relative; z-index: 2;
+  max-height: 58vh;
+  margin-bottom: 16vh;
+  pointer-events: none;
+  animation: doctor-float 3s ease-in-out infinite;
+}
+@keyframes doctor-float {
+  0%,100% { transform: translateY(0); }
+  50%     { transform: translateY(-1.5vh); }
+}
+
+#intro-dialog-box {
+  position: absolute; bottom: 4vh; left: 50%;
+  transform: translateX(-50%);
+  width: 86%; max-width: 1100px; min-height: 15vh;
+  background: rgba(255,255,255,0.94);
+  border-radius: 4vh;
+  padding: 3.5vh 4vw;
+  box-shadow: 0 1vh 3vh rgba(0,0,0,0.18);
+  z-index: 3;
+  display: flex; flex-direction: column; justify-content: center;
+}
+#intro-dialog-text {
+  font-size: 2.5vh; font-weight: 600;
+  color: #333; line-height: 1.7;
+}
+#intro-dialog-arrow {
+  position: absolute; bottom: 1.5vh; right: 3vw;
+  font-size: 2.8vh; color: #888;
+  animation: arrow-blink 0.9s infinite; display: none;
+}
+@keyframes arrow-blink {
+  0%,50% { opacity: 1; } 51%,100% { opacity: 0.2; }
+}
+
+/* 선택지 (딸/아들) */
+.intro-choice-overlay {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,0.25);
+  display: flex; align-items: center; justify-content: center;
+  gap: 5vw; z-index: 5;
+}
+.intro-choice-btn {
+  padding: 3vh 7vw;
+  border-radius: 3.5vh;
+  border: 0.5vh solid #d8a0c0;
+  background: rgba(255,255,255,0.96);
+  font-size: 3.5vh; font-weight: 800;
+  font-family: inherit; color: #7a5a6a;
+  cursor: pointer; transition: transform 0.12s;
+}
+.intro-choice-btn:active { transform: scale(0.95); }
+
+/* 입력창 (큼직, 화면비율 기반) */
+.intro-input-overlay {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,0.25);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 5;
+}
+.intro-input-box {
+  display: flex; align-items: center; gap: 1.5vw;
+  background: white;
+  border: 0.5vh solid #ddd;
+  border-radius: 3.5vh;
+  padding: 2vh 2vh 2vh 3vw;
+  width: 64%; max-width: 800px;
+}
+.intro-input-field {
+  flex: 1; border: none; outline: none;
+  font-size: 3.2vh; font-weight: 600;
+  color: #333; font-family: inherit; min-width: 0;
+}
+.intro-input-confirm {
+  padding: 1.6vh 3vw;
+  border-radius: 2.8vh; border: none;
+  background: #FFD700; color: white;
+  font-size: 2.6vh; font-weight: 800;
+  font-family: inherit; cursor: pointer;
+  letter-spacing: 1px; white-space: nowrap;
+  box-shadow: 0 0.5vh 0 #B8960A;
+}
+.intro-input-confirm:active { transform: translateY(0.4vh); box-shadow: 0 0 0 #B8960A; }

@@ -1,5 +1,155 @@
 'use strict';
 
+/* ════════════ 인트로/아웃트로 ════════════ */
+const introScript = [
+  { text: "이 세계에는 '엄마' 라는 존재가 있단다." },
+  { text: "그 존재는 세상에 태어난 생명체라면 모두 가지고 있는 존재였지." },
+  { text: "사람들은 흔히 엄마를 강인한 존재라 말하지만, 사실 그 단어로 엄마를 설명하기엔 어려움이 있지." },
+  { text: "'엄마' 라는 단어를 뛰어넘어, 그녀의 진정한 모습을 다시 세상 밖으로 꺼낼 시간이 왔어." },
+  { text: "네 손끝에서 다시 태어날 그녀의 우아한 일대기를... 이 세계가 숨을 죽이고 기다리고 있단다." },
+  { text: "그런데... 너는 딸인가 아들인가?" },
+  { choice: [ {text:'딸', value:'daughter'}, {text:'아들', value:'son'} ], key: 'childType' },
+  { text: "네 이름은 무엇이지?" },
+  { textInput: { prompt: '네 이름은?', key: 'playerName' } },
+  { text: "네 이름은 {playerName}이구나! 네 엄마의 이름은 무엇이지?" },
+  { textInput: { prompt: '엄마의 이름은?', key: 'momName' } },
+  { text: "그럼 너의 엄마는 어떤 사람인지 알려주렴!" },
+  { action: 'goCustomize' },
+];
+
+const outroScript = [
+  { text: "그럼 이제부터 너와 엄마의 일주일간의 연구가 시작된다. 준비는 됐나?" },
+  { text: "자, 가자! 엄마와 너의 세계로!" },
+  { action: 'goGame' },
+];
+
+let _curScript = null, _idx = 0;
+let _typing = false, _full = '', _timer = null, _waiting = false;
+let _inChoice = false, _inInput = false;
+
+function introInterpolate(text) {
+  return text.replace(/\{(\w+)\}/g, (m, k) => localStorage.getItem(k) || '');
+}
+
+function runScript(script) {
+  _curScript = script; _idx = 0;
+  nextIntroLine();
+}
+function nextIntroLine() {
+  if (_idx >= _curScript.length) return;
+  const line = _curScript[_idx++];
+  if (line.action === 'goCustomize') { fadeToCustomize(); return; }
+  if (line.action === 'goGame')      { fadeToGame(); return; }
+  if (line.choice)    { showIntroChoice(line); return; }
+  if (line.textInput) { showIntroInput(line.textInput); return; }
+  document.getElementById('intro-dialog-arrow').style.display = 'none';
+  typeIntro(introInterpolate(line.text), () => {
+    _waiting = true;
+    document.getElementById('intro-dialog-arrow').style.display = 'block';
+  });
+}
+function typeIntro(text, onDone) {
+  const el = document.getElementById('intro-dialog-text');
+  _full = text; _typing = true; el.textContent = ''; let i = 0;
+  _timer = setInterval(() => {
+    if (i < text.length) el.textContent += text[i++];
+    else { clearInterval(_timer); _typing = false; onDone(); }
+  }, 45);
+}
+function finishIntroTyping() {
+  clearInterval(_timer);
+  document.getElementById('intro-dialog-text').textContent = _full;
+  _typing = false; _waiting = true;
+  document.getElementById('intro-dialog-arrow').style.display = 'block';
+}
+function advanceIntro() {
+  if (_inChoice || _inInput) return;
+  if (_typing) { finishIntroTyping(); return; }
+  if (_waiting) {
+    _waiting = false;
+    document.getElementById('intro-dialog-arrow').style.display = 'none';
+    nextIntroLine();
+  }
+}
+function showIntroChoice(line) {
+  _inChoice = true;
+  const ov = document.createElement('div');
+  ov.className = 'intro-choice-overlay';
+  line.choice.forEach(opt => {
+    const b = document.createElement('button');
+    b.className = 'intro-choice-btn';
+    b.textContent = opt.text;
+    b.addEventListener('click', e => {
+      e.stopPropagation();
+      localStorage.setItem(line.key, opt.value);
+      ov.remove(); _inChoice = false; nextIntroLine();
+    });
+    ov.appendChild(b);
+  });
+  document.getElementById('intro-screen').appendChild(ov);
+}
+function showIntroInput(cfg) {
+  _inInput = true;
+  const ov = document.createElement('div');
+  ov.className = 'intro-input-overlay';
+  ov.innerHTML = `
+    <div class="intro-input-box">
+      <input type="text" class="intro-input-field" maxlength="10" placeholder="${cfg.prompt}">
+      <button class="intro-input-confirm">완료!</button>
+    </div>`;
+  document.getElementById('intro-screen').appendChild(ov);
+  const input = ov.querySelector('.intro-input-field');
+  input.focus();
+  const done = (e) => {
+    if (e) e.stopPropagation();
+    const v = input.value.trim();
+    if (!v) return;
+    localStorage.setItem(cfg.key, v);
+    ov.remove(); _inInput = false; nextIntroLine();
+  };
+  ov.querySelector('.intro-input-confirm').addEventListener('click', done);
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); done(e); }
+    e.stopPropagation();
+  });
+}
+
+/* 인트로 끝 → 커마 화면으로 (오버레이 페이드아웃) */
+function fadeToCustomize() {
+  const intro = document.getElementById('intro-screen');
+  intro.classList.add('fade-out');
+  setTimeout(() => intro.classList.add('hidden'), 800);
+}
+
+/* 아웃트로 시작 (커마 완료 후 박사 재등장) */
+function showOutro() {
+  const intro = document.getElementById('intro-screen');
+  intro.classList.remove('hidden', 'fade-out');
+  intro.style.opacity = '0';
+  requestAnimationFrame(() => {
+    intro.style.transition = 'opacity 0.8s';
+    intro.style.opacity = '1';
+  });
+  setTimeout(() => runScript(outroScript), 800);
+}
+
+/* 아웃트로 끝 → 게임으로 (하얗게 페이드) */
+function fadeToGame() {
+  document.body.style.transition = 'opacity 0.6s';
+  document.body.style.opacity = '0';
+  setTimeout(() => { location.href = 'game.html'; }, 600);
+}
+
+/* 시작 */
+window.addEventListener('load', () => {
+  const bg = document.getElementById('intro-bg');
+  bg.style.background = '#ffe0ec';            // 흰색 → 연분홍 페이드
+  setTimeout(() => bg.classList.add('cycling'), 2000);  // 이후 무지개 순환
+  document.getElementById('intro-screen').addEventListener('click', advanceIntro);
+  runScript(introScript);
+});
+
+
 const state = {
   hairColor:      'hc_0',
   faceType:       'face1',
@@ -290,6 +440,6 @@ function showResult() {
   document.getElementById('result-screen').classList.remove('hidden');
   document.getElementById('next-btn').addEventListener('click', () => {
     localStorage.setItem('charData', JSON.stringify({ ...state, mbti, mbtiName: data.name }));
-    window.location.href = 'game.html';
+    howOutro();
   }, { once: true });
 }
