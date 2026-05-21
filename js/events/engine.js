@@ -312,30 +312,42 @@ window.EventEngine = (() => {
     const el = document.getElementById('item-reveal'); if (el) el.remove();
     inReveal = false; nextLine();
   }
-  function showTextInput(c) {
-    inTextInput = true;
-    const ov = document.createElement('div');
-    ov.id = 'text-input-overlay';
-    ov.innerHTML = `
-      <div class="input-prompt-box">
-        <div class="input-prompt">${c.prompt}</div>
-        <div class="input-row">
-          <input type="text" id="text-input-field" maxlength="30">
-          <span class="input-suffix">${c.suffix}</span>
-          <button class="confirm-btn" id="confirm-input">완료!</button>
-        </div>
-      </div>`;
-    document.getElementById('event-scene').appendChild(ov);
-    const input = document.getElementById('text-input-field'); input.focus();
-    const done = (e) => {
-      if (e) e.stopPropagation();
-      const v = input.value.trim(); if (!v) return;
-      localStorage.setItem('var_' + c.key, v);
-      ov.remove(); inTextInput = false; nextLine();
-    };
-    document.getElementById('confirm-input').addEventListener('click', done);
-    input.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); done(e); } e.stopPropagation(); });
-  }
+function showTextInput(c) {
+		inTextInput = true;
+		const ov = document.createElement('div');
+		ov.id = 'text-input-overlay';
+		ov.innerHTML = `
+			<div class="input-prompt-box">
+				<div class="input-prompt">${c.prompt}</div>
+				<div class="input-row">
+					<input type="text" id="text-input-field" maxlength="30">
+					<span class="input-suffix">${c.suffix || ''}</span>
+					<button class="confirm-btn" id="confirm-input">완료!</button>
+				</div>
+			</div>`;
+		document.getElementById('event-scene').appendChild(ov);
+		const input = document.getElementById('text-input-field'); input.focus();
+		const done = (e) => {
+			if (e) e.stopPropagation();
+			const v = input.value.trim(); if (!v) return;
+			localStorage.setItem('var_' + c.key, v);
+			ov.remove(); inTextInput = false;
+
+			// 키워드 라우팅: 입력에 특정 단어가 포함되면 다른 루트로 점프
+			if (c.routes) {
+				const lower = v.toLowerCase();
+				const hit = c.routes.find(r => r.keywords.some(kw => lower.includes(kw.toLowerCase())));
+				const target = hit ? hit.route : c.default;
+				if (target) {
+					dialogQueue = [...cfg.dialogues[target]]; dialogIdx = 0; nextLine();
+					return;
+				}
+			}
+			nextLine();
+		};
+		document.getElementById('confirm-input').addEventListener('click', done);
+		input.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); done(e); } e.stopPropagation(); });
+	}
   function advance() {
     if (inChoice || inTextInput) return;
     if (inTitle)  { hideTitle(); return; }
