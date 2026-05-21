@@ -320,7 +320,7 @@ window.EventEngine = (() => {
       <div class="input-prompt-box">
         <div class="input-prompt">${c.prompt}</div>
         <div class="input-row">
-          <input type="text" id="text-input-field" maxlength="8">
+          <input type="text" id="text-input-field" maxlength="30">
           <span class="input-suffix">${c.suffix}</span>
           <button class="confirm-btn" id="confirm-input">완료!</button>
         </div>
