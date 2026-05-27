@@ -22,6 +22,31 @@ window.EventEngine = (() => {
     c[cfg.id] = (c[cfg.id] || 0) + 1;
     localStorage.setItem('eventCounts', JSON.stringify(c));
   }
+function mbtiFromStats(s) {
+	s = s || {};
+	return ((s.외향성||0) >= (s.내향성||0) ? 'E' : 'I')
+	     + ((s.직관  ||0) >= (s.감각  ||0) ? 'N' : 'S')
+	     + ((s.감정성||0) >= (s.논리성||0) ? 'F' : 'T')
+	     + ((s.융통성||0) >= (s.계획성||0) ? 'P' : 'J');
+}
+function recomputeMBTI() {
+	const stats = JSON.parse(localStorage.getItem('stats') || '{}');
+	const mbti = mbtiFromStats(stats);
+	const cd = JSON.parse(localStorage.getItem('charData') || '{}');
+	cd.mbti = mbti;
+	localStorage.setItem('charData', JSON.stringify(cd));
+	D.mbti = mbti;                                 // 진행 중인 이벤트에도 즉시 반영
+	const el = document.getElementById('menu-mbti-value');
+	if (el) el.textContent = mbti;                 // 메뉴 표시 갱신
+	if (window.refreshMBTI) window.refreshMBTI();
+}
+function applyStats(delta) {
+    const stats = JSON.parse(localStorage.getItem('stats') || '{}');
+    for (const k in delta) stats[k] = (stats[k] || 0) + delta[k];
+    localStorage.setItem('stats', JSON.stringify(stats));
+    recomputeMBTI();
+    nextLine();   // 바로 다음 줄로
+  }
   function interpolate(text) {
     return text.replace(/\{(\w+)\}/g, (m, key) => {
       if (key === 'child')      return localStorage.getItem('childType') === 'son' ? '아들' : '딸';
@@ -165,6 +190,12 @@ window.EventEngine = (() => {
     scene.classList.remove('cutscene');               // 캐릭터 복귀
     setTimeout(() => nextLine(), 500);
   }
+/* ── 이벤트 중 배경 교체 ── */
+function setBg(name) {
+	const url = name.includes('/') ? name : `assets/bg/${name}.png`;
+	document.getElementById('event-bg').style.backgroundImage = `url('${url}')`;
+	nextLine();   // 바로 다음 줄로
+}
 
   /* ── 타이핑 ── */
   function typeText(text, onDone) {
@@ -210,11 +241,11 @@ window.EventEngine = (() => {
 
   /* ── 진행 ── */
   function nextLine() {
-    if (dialogIdx >= dialogQueue.length) { endEvent(null); return; }
+    if (dialogIdx >= dialogQueue.length) { endEvent(); return; }
     const line = dialogQueue[dialogIdx++];
     applyExpression(line.expression);
 
-    if (line.end)        { endEvent(line.item || null); return; }
+    if (line.end)        { endEvent(line); return; }
     if (line.choice)     { showChoices(line.choice); return; }
     if (line.itemReveal) { showItemReveal(line.itemReveal, line.description); return; }
     if (line.textInput)  { showTextInput(line.textInput); return; }
@@ -223,6 +254,9 @@ window.EventEngine = (() => {
     if (line.npcExit)    { npcExit(); return; }
     if (line.propShow)   { propShow(line.propShow); return; }
     if (line.propExit)   { propHide(); return; }
+	if (line.setBg)      { setBg(line.setBg); return; }
+	if (line.stats)      { applyStats(line.stats); return; }
+if (line.goto)       { dialogQueue = [...cfg.dialogues[line.goto]]; dialogIdx = 0; nextLine(); return; }
     if (line.narration)  { showNarration(line.narration); return; }
 
     setupSpeaker(line.speaker);
@@ -244,13 +278,17 @@ window.EventEngine = (() => {
       document.getElementById('dialog-arrow').style.display = 'block';
     });
   }
-  function handleBranch(line) {
-    const mbti = D.mbti || 'ENFP';
+function handleBranch(line) {
     let key;
-    if (line.branch === 'momEI') key = mbti[0];
-  if (line.branch === 'momSN') key = mbti[1];
-  if (line.branch === 'momTF') key = mbti[2];
-  if (line.branch === 'momJP') key = mbti[3]; 
+    if (line.branch.indexOf('var:') === 0) {
+      key = localStorage.getItem('var_' + line.branch.slice(4)) || '';
+    } else {
+      const mbti = D.mbti || 'ENFP';
+      if (line.branch === 'momEI') key = mbti[0];
+      if (line.branch === 'momSN') key = mbti[1];
+      if (line.branch === 'momTF') key = mbti[2];
+      if (line.branch === 'momJP') key = mbti[3];
+    }
     const sub = (line.cases && line.cases[key]) || [];
     dialogQueue.splice(dialogIdx, 0, ...sub);
     nextLine();
@@ -269,7 +307,7 @@ window.EventEngine = (() => {
     const el = document.getElementById('title-overlay'); if (el) el.remove();
     const cb = titleDismissCallback; titleDismissCallback = null; if (cb) cb();
   }
-  function showChoices(options) {
+function showChoices(options) {
     inChoice = true;
     const list = document.getElementById('choice-list');
     list.innerHTML = '';
@@ -280,15 +318,27 @@ window.EventEngine = (() => {
       btn.addEventListener('click', e => {
         e.stopPropagation(); inChoice = false;
         const ch = JSON.parse(localStorage.getItem('eventChoices') || '{}');
-        ch[cfg.id] = opt.route;
+        ch[cfg.id] = opt.route || opt.text;
         localStorage.setItem('eventChoices', JSON.stringify(ch));
+        // 선택지로 변수 지정 (set: { 키: 값 })
+        if (opt.set) {
+          for (const k in opt.set) localStorage.setItem('var_' + k, opt.set[k]);
+        }
+	if (opt.stats) {
+          const stats = JSON.parse(localStorage.getItem('stats') || '{}');
+          for (const k in opt.stats) stats[k] = (stats[k] || 0) + opt.stats[k];
+          localStorage.setItem('stats', JSON.stringify(stats));
+          recomputeMBTI();
+        }
         document.getElementById('choice-overlay').style.display = 'none';
-        dialogQueue = [...cfg.dialogues[opt.route]]; dialogIdx = 0; nextLine();
+        if (opt.route) { dialogQueue = [...cfg.dialogues[opt.route]]; dialogIdx = 0; }
+        nextLine();   // route 있으면 점프, 없으면 그대로 이어서
       });
       list.appendChild(btn);
     });
     document.getElementById('choice-overlay').style.display = 'flex';
   }
+
   function showItemReveal(itemName, description) {
     inReveal = true;
     const owned = JSON.parse(localStorage.getItem('ownedItems') || '[]');
@@ -363,8 +413,18 @@ function showTextInput(c) {
     if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); advance(); }
   }
 
-  function endEvent(item) {
+ function endEvent(endLine) {
+    endLine = endLine || {};
+    const item = endLine.item || null;
     incrementCount();
+
+    if (endLine.stats) {
+      const stats = JSON.parse(localStorage.getItem('stats') || '{}');
+      for (const k in endLine.stats) stats[k] = (stats[k] || 0) + endLine.stats[k];
+      localStorage.setItem('stats', JSON.stringify(stats));
+      recomputeMBTI();
+    }
+
     if (item) localStorage.setItem('currentItem', JSON.stringify({ name: item, source: cfg.id }));
     else      localStorage.removeItem('currentItem');
 

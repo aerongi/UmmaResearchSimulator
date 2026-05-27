@@ -581,7 +581,7 @@ document.querySelectorAll('.outdoor-place').forEach(btn => {
     const eventMap = {
       restaurant: 'restaurant',
       mart: 'mart',
-      // dept: 'dept', movie: 'movie', street: 'street', park: 'park',  // 만들면 주석 해제
+      movie: 'movie', // dept: 'dept', street: 'street', park: 'park',  // 만들면 주석 해제
     };
     const ev = eventMap[place];
     if (!ev) return;                       // 아직 안 만든 장소는 무시
@@ -644,6 +644,7 @@ window.exitEvent = () => {
   document.getElementById('outing-screen').classList.remove('visible');
   document.getElementById('outdoor-screen').classList.remove('visible');
   document.getElementById('back-btn').classList.remove('visible');
+	setTimeout(maybeRandomEvent, 600);
 };
 
 /* ── 일자/시간 HUD ── */
@@ -721,3 +722,12 @@ window.refreshHeldItem = function() {
   handR.add(heldItemSprite);
 };
 window.refreshHeldItem();   // 초기 1회 호출
+
+function maybeRandomEvent() {
+	if (Math.random() < 0.5) {                          // 50% 확률
+		const n = Math.floor(Math.random() * 4) + 1;   // 1~4 중 하나
+		SaveSystem.showToast(`이벤트 발생 ${n}`);        // 임시: 토스트로만 알림
+		// TODO: 나중에 여기서 실제 랜덤 이벤트 + event1 브금 띄우기
+		// 예) loadEvent('random' + n);
+	}
+}
