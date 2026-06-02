@@ -460,16 +460,18 @@ function showResult() {
   document.getElementById('customize-screen').classList.add('hidden');
   document.getElementById('result-screen').classList.remove('hidden');
 document.getElementById('next-btn').addEventListener('click', () => {
-		const initialStats = computeInitialStats();
-		localStorage.setItem('charData', JSON.stringify({ ...state, mbti, mbtiName: data.name, initialStats }));
+    const initialStats = computeInitialStats();
+    localStorage.setItem('charData', JSON.stringify({ ...state, mbti, mbtiName: data.name, initialStats }));
 
-    // [테스트용] 캐릭터 생성 시 통계 기록 — 최종본에선 엔딩으로 옮길 것
-    if (window.Stats) {
-      Stats.recordCreation({
-        childType:   localStorage.getItem('childType') || 'daughter',
-        initialMbti: mbti,
-      });
-    }
-		showOutro();
-	}, { once: true });
-}
+    showOutro();   // ← 먼저 진행시키고
+
+    // 통계는 뒤에서 조용히 (실패해도 게임 진행에 영향 X)
+    try {
+      if (window.Stats) {
+        Stats.recordCreation({
+          childType:   localStorage.getItem('childType') || 'daughter',
+          initialMbti: mbti,
+        });
+      }
+    } catch (e) { console.warn(e); }
+  }, { once: true });
