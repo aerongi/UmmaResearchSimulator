@@ -20,9 +20,9 @@ window.event_mart = EventEngine.create({
       { narration: '얼추 장을 보고, 과자 코너를 지나치다...' },
       { speaker: 'mom', text: '우리 {child}, 과자 먹고 싶은 거 있어? 하나 사서 엄마랑 나눠 먹자.' },
       { choice: [
-        { text: '복각칩을 사자',          route: 'route1' },
-        { text: '백배로를 사자',          route: 'route2' },
-        { text: '엄마가 좋아하는 걸 사자', route: 'route3' },
+        { id: 'snack_bokgak',    text: '복각칩을 사자',          route: 'route1' },
+        { id: 'snack_baekbaero', text: '백배로를 사자',          route: 'route2' },
+        { id: 'snack_mom',       text: '엄마가 좋아하는 걸 사자', route: 'route3' },
       ]},
     ],
     route1: [
