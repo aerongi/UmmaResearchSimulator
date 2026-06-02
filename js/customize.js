@@ -462,6 +462,14 @@ function showResult() {
 document.getElementById('next-btn').addEventListener('click', () => {
 		const initialStats = computeInitialStats();
 		localStorage.setItem('charData', JSON.stringify({ ...state, mbti, mbtiName: data.name, initialStats }));
+
+    // [테스트용] 캐릭터 생성 시 통계 기록 — 최종본에선 엔딩으로 옮길 것
+    if (window.Stats) {
+      Stats.recordCreation({
+        childType:   localStorage.getItem('childType') || 'daughter',
+        initialMbti: mbti,
+      });
+    }
 		showOutro();
 	}, { once: true });
 }

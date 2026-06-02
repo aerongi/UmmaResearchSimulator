@@ -43,6 +43,16 @@ window.Stats = {
     } catch (e) { console.warn('recordEnding', e); }
   },
 
+// [테스트용] 캐릭터 생성 시 성별 + 초기 MBTI 기록
+  async recordCreation(d) {
+    try {
+      const batch = db.batch();
+      batch.set(db.collection('endings').doc('childType'),   { [d.childType]: inc(1) },   { merge: true });
+      batch.set(db.collection('endings').doc('initialMbti'), { [d.initialMbti]: inc(1) }, { merge: true });
+      await batch.commit();
+    } catch (e) { console.warn('recordCreation', e); }
+  },
+
   async fetchAggregates() {
     try {
       const [child, initMbti, finalMbti, statsSum] = await Promise.all([
