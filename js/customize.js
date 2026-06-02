@@ -475,3 +475,4 @@ document.getElementById('next-btn').addEventListener('click', () => {
       }
     } catch (e) { console.warn(e); }
   }, { once: true });
+}
