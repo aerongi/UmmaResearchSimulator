@@ -22,31 +22,37 @@ window.EventEngine = (() => {
     c[cfg.id] = (c[cfg.id] || 0) + 1;
     localStorage.setItem('eventCounts', JSON.stringify(c));
   }
-function mbtiFromStats(s) {
-	s = s || {};
-	return ((s.외향성||0) >= (s.내향성||0) ? 'E' : 'I')
-	     + ((s.직관  ||0) >= (s.감각  ||0) ? 'N' : 'S')
-	     + ((s.감정성||0) >= (s.논리성||0) ? 'F' : 'T')
-	     + ((s.융통성||0) >= (s.계획성||0) ? 'P' : 'J');
-}
-function recomputeMBTI() {
-	const stats = JSON.parse(localStorage.getItem('stats') || '{}');
-	const mbti = mbtiFromStats(stats);
-	const cd = JSON.parse(localStorage.getItem('charData') || '{}');
-	cd.mbti = mbti;
-	localStorage.setItem('charData', JSON.stringify(cd));
-	D.mbti = mbti;                                 // 진행 중인 이벤트에도 즉시 반영
-	const el = document.getElementById('menu-mbti-value');
-	if (el) el.textContent = mbti;                 // 메뉴 표시 갱신
-	if (window.refreshMBTI) window.refreshMBTI();
-}
-function applyStats(delta) {
+
+  /* ── 스탯 → MBTI 재계산 ── */
+  function mbtiFromStats(s) {
+    s = s || {};
+    return ((s.외향성 || 0) >= (s.내향성 || 0) ? 'E' : 'I')
+         + ((s.직관   || 0) >= (s.감각   || 0) ? 'N' : 'S')
+         + ((s.감정성 || 0) >= (s.논리성 || 0) ? 'F' : 'T')
+         + ((s.융통성 || 0) >= (s.계획성 || 0) ? 'P' : 'J');
+  }
+  function recomputeMBTI() {
+    const stats = JSON.parse(localStorage.getItem('stats') || '{}');
+    const mbti = mbtiFromStats(stats);
+    const cd = JSON.parse(localStorage.getItem('charData') || '{}');
+    cd.mbti = mbti;
+    localStorage.setItem('charData', JSON.stringify(cd));
+    D.mbti = mbti;                                 // 진행 중인 이벤트에도 즉시 반영
+    const el = document.getElementById('menu-mbti-value');
+    if (el) el.textContent = mbti;                 // 메뉴 표시 갱신
+    if (window.refreshMBTI) window.refreshMBTI();
+  }
+  function addStats(delta) {
     const stats = JSON.parse(localStorage.getItem('stats') || '{}');
     for (const k in delta) stats[k] = (stats[k] || 0) + delta[k];
     localStorage.setItem('stats', JSON.stringify(stats));
     recomputeMBTI();
-    nextLine();   // 바로 다음 줄로
   }
+  function applyStats(delta) {
+    addStats(delta);
+    nextLine();   // 독립 stats 줄: 바로 다음 줄로
+  }
+
   function interpolate(text) {
     return text.replace(/\{(\w+)\}/g, (m, key) => {
       if (key === 'child')      return localStorage.getItem('childType') === 'son' ? '아들' : '딸';
@@ -166,7 +172,7 @@ function applyStats(delta) {
     setTimeout(() => nextLine(), 750);
   }
 
-/* ── 컷씬 소품 (획득X, 연출용) ── */
+  /* ── 컷씬 소품 (획득X, 연출용) ── */
   function propShow(name) {
     const scene = document.getElementById('event-scene');
     scene.classList.add('cutscene');                 // 캐릭터/NPC 숨김
@@ -190,12 +196,13 @@ function applyStats(delta) {
     scene.classList.remove('cutscene');               // 캐릭터 복귀
     setTimeout(() => nextLine(), 500);
   }
-/* ── 이벤트 중 배경 교체 ── */
-function setBg(name) {
-	const url = name.includes('/') ? name : `assets/bg/${name}.png`;
-	document.getElementById('event-bg').style.backgroundImage = `url('${url}')`;
-	nextLine();   // 바로 다음 줄로
-}
+
+  /* ── 이벤트 중 배경 교체 ── */
+  function setBg(name) {
+    const url = name.includes('/') ? name : `assets/bg/${name}.png`;
+    document.getElementById('event-bg').style.backgroundImage = `url('${url}')`;
+    nextLine();   // 바로 다음 줄로
+  }
 
   /* ── 타이핑 ── */
   function typeText(text, onDone) {
@@ -254,9 +261,9 @@ function setBg(name) {
     if (line.npcExit)    { npcExit(); return; }
     if (line.propShow)   { propShow(line.propShow); return; }
     if (line.propExit)   { propHide(); return; }
-	if (line.setBg)      { setBg(line.setBg); return; }
-	if (line.stats)      { applyStats(line.stats); return; }
-if (line.goto)       { dialogQueue = [...cfg.dialogues[line.goto]]; dialogIdx = 0; nextLine(); return; }
+    if (line.setBg)      { setBg(line.setBg); return; }
+    if (line.stats)      { applyStats(line.stats); return; }
+    if (line.goto)       { dialogQueue = [...cfg.dialogues[line.goto]]; dialogIdx = 0; nextLine(); return; }
     if (line.narration)  { showNarration(line.narration); return; }
 
     setupSpeaker(line.speaker);
@@ -278,7 +285,7 @@ if (line.goto)       { dialogQueue = [...cfg.dialogues[line.goto]]; dialogIdx = 
       document.getElementById('dialog-arrow').style.display = 'block';
     });
   }
-function handleBranch(line) {
+  function handleBranch(line) {
     let key;
     if (line.branch.indexOf('var:') === 0) {
       key = localStorage.getItem('var_' + line.branch.slice(4)) || '';
@@ -307,36 +314,61 @@ function handleBranch(line) {
     const el = document.getElementById('title-overlay'); if (el) el.remove();
     const cb = titleDismissCallback; titleDismissCallback = null; if (cb) cb();
   }
-function showChoices(options) {
+
+  /* ── 선택지 (+ 온라인 통계) ── */
+  function showChoices(options) {
     inChoice = true;
     const list = document.getElementById('choice-list');
     list.innerHTML = '';
+
     options.forEach(opt => {
       const btn = document.createElement('button');
       btn.className = 'choice-btn';
-      btn.textContent = opt.text;
+      btn.dataset.choiceId = opt.id || opt.text;
+      btn.innerHTML = `<span class="choice-label">${opt.text}</span>`;
       btn.addEventListener('click', e => {
         e.stopPropagation(); inChoice = false;
+
         const ch = JSON.parse(localStorage.getItem('eventChoices') || '{}');
-        ch[cfg.id] = opt.route || opt.text;
+        ch[cfg.id] = opt.id || opt.route || opt.text;
         localStorage.setItem('eventChoices', JSON.stringify(ch));
-        // 선택지로 변수 지정 (set: { 키: 값 })
+
         if (opt.set) {
           for (const k in opt.set) localStorage.setItem('var_' + k, opt.set[k]);
         }
-	if (opt.stats) {
-          const stats = JSON.parse(localStorage.getItem('stats') || '{}');
-          for (const k in opt.stats) stats[k] = (stats[k] || 0) + opt.stats[k];
-          localStorage.setItem('stats', JSON.stringify(stats));
-          recomputeMBTI();
-        }
+        if (opt.stats) addStats(opt.stats);
+
+        // 온라인 통계: 선택 기록 (토글 무관, 항상)
+        if (window.Stats && opt.id) Stats.recordChoice(cfg.id, opt.id);
+
         document.getElementById('choice-overlay').style.display = 'none';
         if (opt.route) { dialogQueue = [...cfg.dialogues[opt.route]]; dialogIdx = 0; }
         nextLine();   // route 있으면 점프, 없으면 그대로 이어서
       });
       list.appendChild(btn);
     });
+
     document.getElementById('choice-overlay').style.display = 'flex';
+
+    // 온라인 통계 ON이면 각 선택지 비율 표시
+    if (window.Stats && localStorage.getItem('onlineStatsOn') === '1') {
+      Stats.fetchChoices(cfg.id).then(counts => {
+        const total = Object.values(counts).reduce((a, b) => a + b, 0);
+        list.querySelectorAll('.choice-btn').forEach(btn => {
+          const id = btn.dataset.choiceId;
+          const n = counts[id] || 0;
+          const pct = total > 0 ? Math.round((n / total) * 100) : 0;
+          btn.classList.add('has-stat');
+          btn.style.setProperty('--stat-pct', pct + '%');
+          if (!btn.querySelector('.choice-pct')) {
+            const tag = document.createElement('span');
+            tag.className = 'choice-pct';
+            tag.textContent = pct + '%';
+            btn.appendChild(tag);
+          }
+        });
+      });
+    }
   }
 
   function showItemReveal(itemName, description) {
@@ -362,42 +394,43 @@ function showChoices(options) {
     const el = document.getElementById('item-reveal'); if (el) el.remove();
     inReveal = false; nextLine();
   }
-function showTextInput(c) {
-		inTextInput = true;
-		const ov = document.createElement('div');
-		ov.id = 'text-input-overlay';
-		ov.innerHTML = `
-			<div class="input-prompt-box">
-				<div class="input-prompt">${c.prompt}</div>
-				<div class="input-row">
-					<input type="text" id="text-input-field" maxlength="30">
-					<span class="input-suffix">${c.suffix || ''}</span>
-					<button class="confirm-btn" id="confirm-input">완료!</button>
-				</div>
-			</div>`;
-		document.getElementById('event-scene').appendChild(ov);
-		const input = document.getElementById('text-input-field'); input.focus();
-		const done = (e) => {
-			if (e) e.stopPropagation();
-			const v = input.value.trim(); if (!v) return;
-			localStorage.setItem('var_' + c.key, v);
-			ov.remove(); inTextInput = false;
+  function showTextInput(c) {
+    inTextInput = true;
+    const ov = document.createElement('div');
+    ov.id = 'text-input-overlay';
+    ov.innerHTML = `
+      <div class="input-prompt-box">
+        <div class="input-prompt">${c.prompt}</div>
+        <div class="input-row">
+          <input type="text" id="text-input-field" maxlength="30">
+          <span class="input-suffix">${c.suffix || ''}</span>
+          <button class="confirm-btn" id="confirm-input">완료!</button>
+        </div>
+      </div>`;
+    document.getElementById('event-scene').appendChild(ov);
+    const input = document.getElementById('text-input-field'); input.focus();
+    const done = (e) => {
+      if (e) e.stopPropagation();
+      const v = input.value.trim(); if (!v) return;
+      localStorage.setItem('var_' + c.key, v);
+      ov.remove(); inTextInput = false;
 
-			// 키워드 라우팅: 입력에 특정 단어가 포함되면 다른 루트로 점프
-			if (c.routes) {
-				const lower = v.toLowerCase();
-				const hit = c.routes.find(r => r.keywords.some(kw => lower.includes(kw.toLowerCase())));
-				const target = hit ? hit.route : c.default;
-				if (target) {
-					dialogQueue = [...cfg.dialogues[target]]; dialogIdx = 0; nextLine();
-					return;
-				}
-			}
-			nextLine();
-		};
-		document.getElementById('confirm-input').addEventListener('click', done);
-		input.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); done(e); } e.stopPropagation(); });
-	}
+      // 키워드 라우팅: 입력에 특정 단어가 포함되면 다른 루트로 점프
+      if (c.routes) {
+        const lower = v.toLowerCase();
+        const hit = c.routes.find(r => r.keywords.some(kw => lower.includes(kw.toLowerCase())));
+        const target = hit ? hit.route : c.default;
+        if (target) {
+          dialogQueue = [...cfg.dialogues[target]]; dialogIdx = 0; nextLine();
+          return;
+        }
+      }
+      nextLine();
+    };
+    document.getElementById('confirm-input').addEventListener('click', done);
+    input.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); done(e); } e.stopPropagation(); });
+  }
+
   function advance() {
     if (inChoice || inTextInput) return;
     if (inTitle)  { hideTitle(); return; }
@@ -413,17 +446,12 @@ function showTextInput(c) {
     if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); advance(); }
   }
 
- function endEvent(endLine) {
+  function endEvent(endLine) {
     endLine = endLine || {};
     const item = endLine.item || null;
     incrementCount();
 
-    if (endLine.stats) {
-      const stats = JSON.parse(localStorage.getItem('stats') || '{}');
-      for (const k in endLine.stats) stats[k] = (stats[k] || 0) + endLine.stats[k];
-      localStorage.setItem('stats', JSON.stringify(stats));
-      recomputeMBTI();
-    }
+    if (endLine.stats) addStats(endLine.stats);
 
     if (item) localStorage.setItem('currentItem', JSON.stringify({ name: item, source: cfg.id }));
     else      localStorage.removeItem('currentItem');
@@ -497,6 +525,7 @@ function showTextInput(c) {
       }
       #choice-list { display: flex; flex-direction: column; gap: 18px; }
       .choice-btn {
+        position: relative; overflow: hidden;
         padding: 22px 56px; border-radius: 32px; border: 4px solid #7a6a58;
         background: rgba(255,255,255,0.96); font-size: 22px; font-weight: 700;
         font-family: inherit; color: #444; cursor: pointer; min-width: 440px;
@@ -504,6 +533,16 @@ function showTextInput(c) {
       }
       .choice-btn:hover { background: white; }
       .choice-btn:active { transform: scale(0.96); }
+      .choice-label { position: relative; z-index: 1; }
+      .choice-btn.has-stat::before {
+        content: ''; position: absolute; top: 0; left: 0; bottom: 0;
+        width: var(--stat-pct, 0%); background: rgba(216,160,192,0.35);
+        transition: width 0.5s ease-out; z-index: 0;
+      }
+      .choice-pct {
+        position: relative; z-index: 1; float: right;
+        font-size: 18px; font-weight: 800; color: #b5638a; margin-left: 16px;
+      }
 
       #title-overlay {
         position: fixed; inset: 0; background: rgba(0,0,0,0.6);
@@ -554,7 +593,7 @@ function showTextInput(c) {
       .input-suffix { font-size: 18px; font-weight: 700; color: #888; }
       .confirm-btn { padding: 11px 22px; border-radius: 18px; border: none; background: #FFD700; color: white; font-size: 15px; font-weight: 800; font-family: inherit; cursor: pointer; letter-spacing: 1px; box-shadow: 0 3px 0 #B8960A; transition: transform 0.1s, box-shadow 0.1s; }
       .confirm-btn:hover { background: #FFC400; }
-    .confirm-btn:active { transform: translateY(3px); box-shadow: 0 0 0 #B8960A; }
+      .confirm-btn:active { transform: translateY(3px); box-shadow: 0 0 0 #B8960A; }
 
       .event-prop {
         position: absolute; top: 38%; left: 50%;
