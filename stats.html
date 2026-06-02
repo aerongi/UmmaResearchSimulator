@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>온라인 통계</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Noto Sans KR', sans-serif;
+    background: #FAFAFA; color: #333;
+    padding: 24px 16px 60px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 640px; margin: 0 auto; }
+  .top { text-align: center; margin-bottom: 24px; }
+  .top .sub { font-size: 12px; color: #999; letter-spacing: 1px; }
+  .top h1 { font-size: 22px; font-weight: 800; color: #444; margin-top: 4px; }
+  .back-btn {
+    display: inline-block; margin-top: 14px; padding: 8px 20px;
+    border-radius: 20px; border: 2px solid #C9A0DC; background: rgba(201,160,220,0.15);
+    color: #5a3a6b; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit;
+  }
+  .sec-title { display: flex; align-items: center; gap: 8px; font-size: 16px; font-weight: 800; color: #444; margin: 22px 0 12px; }
+  .card { background: #fff; border: 1px solid #eee; border-radius: 16px; padding: 16px 18px; margin-bottom: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.04); }
+  .card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .card-head .lbl { font-size: 14px; font-weight: 700; }
+  .card-head .mine { font-size: 12px; color: #999; }
+  .card-head .mine b { color: #2C7BD8; font-weight: 700; }
+
+  .splitbar { display: flex; height: 22px; border-radius: 8px; overflow: hidden; border: 1px solid #eee; }
+  .splitbar .seg { display: flex; align-items: center; padding: 0 10px; font-size: 12px; font-weight: 700; }
+
+  .mbti-grid { display: grid; grid-template-columns: 24px 1fr 24px; gap: 6px 10px; align-items: center; font-size: 12px; }
+  .mbti-grid .gbar { display: flex; height: 13px; border-radius: 7px; overflow: hidden; }
+  .mbti-grid .letter { text-align: center; font-weight: 700; }
+  .mbti-grid .dim { text-align: center; color: #bbb; }
+
+  .stat-row { display: grid; grid-template-columns: 60px 1fr 30px; gap: 7px 12px; align-items: center; font-size: 12px; margin-bottom: 2px; }
+  .stat-row .name { color: #888; }
+  .stat-row .track { position: relative; height: 16px; }
+  .stat-row .avg { position: absolute; top: 0; height: 6px; background: #B4B2A9; border-radius: 2px; }
+  .stat-row .me  { position: absolute; top: 9px; height: 6px; background: #ED93B1; border-radius: 2px; }
+  .stat-row .val { text-align: right; font-weight: 700; }
+  .legend { display: flex; gap: 12px; font-size: 11px; }
+  .legend span { display: flex; align-items: center; gap: 5px; color: #888; }
+  .legend i { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+
+  .grp-label { font-size: 11px; color: #999; letter-spacing: 0.5px; margin: 14px 0 6px 2px; }
+  .acc { margin-bottom: 6px; }
+  .acc-btn {
+    width: 100%; display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 16px; border: 1px solid #eee; background: #fff; border-radius: 12px;
+    font-size: 14px; font-weight: 700; color: #444; cursor: pointer; font-family: inherit;
+  }
+  .acc-btn:hover { background: #faf7fc; }
+  .acc-btn .chev { color: #ccc; transition: transform 0.2s; }
+  .acc-btn.open .chev { transform: rotate(180deg); }
+  .acc-body { border: 1px solid #eee; border-top: 0; border-radius: 0 0 12px 12px; padding: 12px 16px 14px; display: none; }
+  .acc-body.open { display: block; }
+  .q { font-size: 12px; color: #999; margin: 4px 0 10px; }
+  .cbar { position: relative; background: #f4f1f6; border-radius: 10px; padding: 9px 12px; overflow: hidden; margin-bottom: 6px; }
+  .cbar .fill { position: absolute; top: 0; left: 0; bottom: 0; background: #F4C0D1; }
+  .cbar .row { position: relative; display: flex; justify-content: space-between; font-size: 12px; }
+  .cbar .pct { font-weight: 800; color: #993556; }
+  .muted { text-align: center; color: #bbb; font-size: 12px; padding: 10px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="sub">7일간의 연구 종료</div>
+    <h1>온라인 통계</h1>
+    <button class="back-btn" onclick="history.back()">← 게임으로</button>
+  </div>
+
+  <div class="sec-title"><span>👥</span> 다른 플레이어와 비교하기</div>
+  <div id="compare">
+    <div class="muted">불러오는 중...</div>
+  </div>
+
+  <div class="sec-title"><span>📋</span> 이벤트별 통계보기</div>
+  <div id="events"></div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="js/firebase.js"></script>
+<script>
+/* ── 이벤트/선택지 정의 (표시용 라벨) ── */
+const EVENT_GROUPS = [
+  { group: '외출', events: [
+    { id: 'restaurant', label: '식당', icon: '🍽️', question: '음식이 잘못 나왔다!',
+      choices: { react_panic: '같이 발 동동 구른다', react_argue: '직원에게 따진다', react_chef: '주방으로 걸어간다' } },
+    { id: 'mart', label: '마트', icon: '🛒', question: '어떤 과자를 살까?',
+      choices: { snack_bokgak: '복각칩', snack_baekbaero: '백배로', snack_mom: '엄마가 좋아하는 것' } },
+    { id: 'movie', label: '영화관', icon: '🎬', question: '엄마에게 무엇을 할까?',
+      choices: { remember_yes: '기억난다', remember_no: '기억 안 난다',
+                 genre_horror: '공포', genre_romance: '로맨스', genre_action: '액션',
+                 act_lean: '살짝 기댄다', act_hand: '손을 잡는다', act_popcorn: '팝콘을 먹여준다', act_none: '아무것도 안 함' } },
+  ]},
+  { group: '실내', events: [
+    { id: 'home', label: '일상 대화', icon: '🏠', question: '', choices: {} },
+  ]},
+  { group: '랜덤 이벤트', events: [
+    { id: 'random1', label: '랜덤 이벤트 1', icon: '✨', question: '', choices: {} },
+    { id: 'random2', label: '랜덤 이벤트 2', icon: '✨', question: '', choices: {} },
+    { id: 'random3', label: '랜덤 이벤트 3', icon: '✨', question: '', choices: {} },
+    { id: 'random4', label: '랜덤 이벤트 4', icon: '✨', question: '', choices: {} },
+  ]},
+];
+
+const STAT_KEYS = ['외향성','내향성','감각','직관','논리성','감정성','계획성','융통성','애정'];
+
+function pct(n, total) { return total > 0 ? Math.round((n / total) * 100) : 0; }
+
+/* ── 비교 섹션 ── */
+async function renderCompare() {
+  const box = document.getElementById('compare');
+  const myChar = JSON.parse(localStorage.getItem('charData') || '{}');
+  const myStats = JSON.parse(localStorage.getItem('stats') || '{}');
+  const myChild = localStorage.getItem('childType') === 'son' ? 'son' : 'daughter';
+
+  let agg = null;
+  if (window.Stats) agg = await Stats.fetchAggregates();
+  agg = agg || { childType: {}, initialMbti: {}, finalMbti: {}, finalStatsSum: {} };
+
+  // 성별
+  const ds = agg.childType.daughter || 0, sn = agg.childType.son || 0, ct = ds + sn;
+  const dPct = pct(ds, ct), sPct = 100 - dPct;
+
+  // 최종 스탯 평균
+  const cnt = agg.finalStatsSum._count || 0;
+  const avg = {};
+  STAT_KEYS.forEach(k => { avg[k] = cnt > 0 ? (agg.finalStatsSum[k] || 0) / cnt : 0; });
+  const maxStat = Math.max(10, ...STAT_KEYS.map(k => Math.max(myStats[k] || 0, avg[k])));
+
+  const showStats = ['외향성','감정성','애정'];
+
+  box.innerHTML = `
+    <div class="card">
+      <div class="card-head"><span class="lbl">자식 성별</span>
+        <span class="mine">당신: <b>${myChild === 'son' ? '아들' : '딸'}</b></span></div>
+      <div class="splitbar">
+        <div class="seg" style="flex:0 0 ${dPct}%; background:#F4C0D1; color:#72243E;">딸 ${dPct}%</div>
+        <div class="seg" style="flex:0 0 ${sPct}%; background:#B5D4F4; color:#0C447C; justify-content:flex-end;">${sPct}% 아들</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><span class="lbl">최종 스탯 (vs 평균)</span>
+        <div class="legend"><span><i style="background:#ED93B1"></i>나</span><span><i style="background:#B4B2A9"></i>평균</span></div></div>
+      ${showStats.map(k => `
+        <div class="stat-row">
+          <div class="name">${k}</div>
+          <div class="track">
+            <div class="avg" style="width:${pct(avg[k], maxStat)}%"></div>
+            <div class="me" style="width:${pct(myStats[k] || 0, maxStat)}%"></div>
+          </div>
+          <div class="val">${myStats[k] || 0}</div>
+        </div>`).join('')}
+      <div class="muted" style="padding:4px;">...외 ${STAT_KEYS.length - showStats.length}개 스탯</div>
+    </div>`;
+}
+
+/* ── 이벤트별 통계 (펼침) ── */
+function renderEvents() {
+  const root = document.getElementById('events');
+  root.innerHTML = '';
+  EVENT_GROUPS.forEach(g => {
+    const lbl = document.createElement('div'); lbl.className = 'grp-label'; lbl.textContent = g.group;
+    root.appendChild(lbl);
+    g.events.forEach(ev => {
+      const acc = document.createElement('div'); acc.className = 'acc';
+      acc.innerHTML = `
+        <button class="acc-btn"><span>${ev.icon} ${ev.label}</span><span class="chev">▼</span></button>
+        <div class="acc-body"></div>`;
+      const btn = acc.querySelector('.acc-btn');
+      const body = acc.querySelector('.acc-body');
+      btn.addEventListener('click', () => {
+        const open = btn.classList.toggle('open');
+        body.classList.toggle('open', open);
+        if (open && !body.dataset.loaded) { body.dataset.loaded = '1'; loadEventStats(ev, body); }
+      });
+      root.appendChild(acc);
+    });
+  });
+}
+
+async function loadEventStats(ev, body) {
+  body.innerHTML = '<div class="muted">불러오는 중...</div>';
+  let counts = {};
+  if (window.Stats) counts = await Stats.fetchChoices(ev.id);
+  const keys = Object.keys(ev.choices);
+  const total = keys.reduce((a, k) => a + (counts[k] || 0), 0);
+  if (total === 0) { body.innerHTML = '<div class="muted">아직 데이터 없음</div>'; return; }
+  body.innerHTML =
+    (ev.question ? `<div class="q">Q. ${ev.question}</div>` : '') +
+    keys.map(k => {
+      const p = pct(counts[k] || 0, total);
+      return `<div class="cbar"><div class="fill" style="width:${p}%"></div>
+        <div class="row"><span>${ev.choices[k]}</span><span class="pct">${p}%</span></div></div>`;
+    }).join('');
+}
+
+renderCompare();
+renderEvents();
+</script>
+</body>
+</html>
