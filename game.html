@@ -469,6 +469,11 @@
       gate.classList.add('hidden');
       setTimeout(() => gate.remove(), 500);
     }, { once: true });
+
+  // 통계창 등 다른 페이지 갔다 돌아왔을 때 — 첫 상호작용에 BGM 복구
+  document.addEventListener('click', () => {
+    if (bgm.paused) bgm.play().catch(() => {});
+  });
   </script>
 
   <!-- 온라인 통계 토글 저장 -->
