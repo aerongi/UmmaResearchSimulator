@@ -521,15 +521,22 @@ window.EventEngine = (() => {
       #choice-overlay {
         position: fixed; inset: 0; background: rgba(0,0,0,0.4);
         z-index: 15; display: none;
-        align-items: center; justify-content: center; padding-bottom: 300px;
+        align-items: center; justify-content: center;
+        padding: 20px; padding-bottom: 300px;
+        overflow-y: auto;
       }
-      #choice-list { display: flex; flex-direction: column; gap: 18px; }
+      #choice-list { display: flex; flex-direction: column; gap: 18px; width: 100%; max-width: 560px; align-items: stretch; }
       .choice-btn {
         position: relative; overflow: hidden;
-        padding: 22px 56px; border-radius: 32px; border: 4px solid #7a6a58;
+        padding: 22px 32px; border-radius: 32px; border: 4px solid #7a6a58;
         background: rgba(255,255,255,0.96); font-size: 22px; font-weight: 700;
-        font-family: inherit; color: #444; cursor: pointer; min-width: 440px;
+        font-family: inherit; color: #444; cursor: pointer;
+        width: 100%; max-width: 100%;
         transition: transform 0.12s, background 0.15s;
+      }
+	@media (max-width: 600px) {
+        #choice-overlay { padding-bottom: 40px; }
+        .choice-btn { font-size: 18px; padding: 16px 20px; }
       }
       .choice-btn:hover { background: white; }
       .choice-btn:active { transform: scale(0.96); }
