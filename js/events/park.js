@@ -79,7 +79,7 @@ window.event_park = EventEngine.create({
         ],
       } },
 
-      { speaker: 'mom', text: '집에 갈까? 소풍은 집에서 해야겠네…' },
+      { speaker: 'mom', text: '집에 갈까? 소풍은 집에서 해야겠네…', expression: 'default' },
       { narration: '그렇게 무사히 비를 피하고 있었을 때…' },
 
       { narration: '"먉, 먀옥. 므약."' },
