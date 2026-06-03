@@ -519,9 +519,9 @@ if (isSitting || isLying) {
   charGroup.position.x = SOFA.x;
   charGroup.position.z = SOFA.z;
   if (isLying) {
-    charGroup.position.y = -0.05;
+    charGroup.position.y = 0.55;           // 소파 위에 눕도록 올림 (바닥 뚫림 방지)
     charGroup.rotation.y = 0;
-    charGroup.rotation.z = Math.PI / 2;    // 옆으로 눕기 (90도 기울임)
+    charGroup.rotation.z = Math.PI / 2;    // 옆으로 눕기 (90도)
   } else {
     charGroup.position.y = -0.18;          // 앉으면 살짝 내려앉음
     charGroup.rotation.y = 0;              // 정면 보고 앉기
