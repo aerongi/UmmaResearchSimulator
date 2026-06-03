@@ -707,7 +707,8 @@ document.querySelectorAll('.outdoor-place').forEach(btn => {
     const eventMap = {
       restaurant: 'restaurant',
       mart: 'mart',
-      movie: 'movie', // dept: 'dept', park: 'park',  // 만들면 주석 해제
+      movie: 'movie',
+	park: 'park', // dept: 'dept', // 만들면 주석 해제
     };
 
     let ev = eventMap[place];
