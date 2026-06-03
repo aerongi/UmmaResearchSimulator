@@ -161,6 +161,8 @@ const state = {
   frontHairType:  'hair1',
   backHairType:   'bhair1',
   clothingColor:  'cl_yellow',
+  wrinkleType:    '',     // 액세서리: 주름 (없음)
+  glassesType:    '',     // 액세서리: 안경 (없음)
   personality:    {},
 };
 
@@ -194,6 +196,7 @@ document.addEventListener('DOMContentLoaded', () => {
   buildFaceGrids();
   buildHairPanel();
   buildClothingPanel();
+ buildAccessoryPanel();
   buildPersonalityPanel();
   setupCategoryTabs();
   setupSubTabs();
@@ -283,6 +286,23 @@ function buildClothingPanel() {
   panel.appendChild(grid);
 }
 
+/* ── 액세서리 탭 ────────────────────────────────── */
+function buildAccessoryPanel() {
+  const panel = document.getElementById('panel-accessory');
+
+  function makeSection(label, gridId, types, stateKey, partType) {
+    panel.appendChild(_sectionTitle(label));
+    const grid = document.createElement('div');
+    grid.className = 'parts-grid';
+    grid.id = gridId;
+    panel.appendChild(grid);
+    buildGrid(gridId, partType, types, stateKey);
+  }
+
+  makeSection('주름', 'wrinkle-grid', FaceParts.WRINKLE_TYPES, 'wrinkleType', 'wrinkle');
+  makeSection('안경', 'glasses-grid', FaceParts.GLASSES_TYPES, 'glassesType', 'glasses');
+}
+
 /* ── 성격 탭 ────────────────────────────────────── */
 function buildPersonalityPanel() {
   const container = document.getElementById('personality-questions');
@@ -295,7 +315,7 @@ function buildPersonalityPanel() {
   QUESTIONS.forEach((q, idx) => {
     const item  = document.createElement('div'); item.className  = 'question-item';
     const qText = document.createElement('div'); qText.className = 'question-text';
-    qText.textContent = `Q${idx+1}. 나와 더 가까운 것은?`;
+    qText.textContent = `Q${idx+1}. 나의 엄마와 더 가까운 것은?`;
     item.appendChild(qText);
 
     const row   = document.createElement('div'); row.className   = 'scale-row';
@@ -383,6 +403,7 @@ function refreshIcons() {
       'face-grid':'face', 'eyes-grid':'eyes', 'eyebrow-grid':'eyebrow',
       'nose-grid':'nose', 'mouth-grid':'mouth',
       'front-hair-grid':'fronthair', 'back-hair-grid':'backhair',
+      'wrinkle-grid':'wrinkle', 'glasses-grid':'glasses',
     };
     const pt = map[gridId];
     if (pt) FaceParts.drawIcon(canvas, pt, item.dataset.id, state);
