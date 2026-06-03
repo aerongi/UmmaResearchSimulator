@@ -136,6 +136,7 @@ function showOutro() {
 
 /* 아웃트로 끝 → 게임으로 (하얗게 페이드) */
 function fadeToGame() {
+  sessionStorage.setItem('newGame', '1');   // 새 게임 시작 표시 (applyStartup이 이때만 초기화)
   document.body.style.transition = 'opacity 0.6s';
   document.body.style.opacity = '0';
   setTimeout(() => { location.href = 'game.html'; }, 600);

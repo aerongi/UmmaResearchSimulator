@@ -71,11 +71,16 @@ buildSaveData() {
         return;
       }
     }
-// 새 게임 - 일시 상태 초기화
-['dayTime','ownedItems','currentItem','eventCounts','eventChoices'].forEach(k => localStorage.removeItem(k));
-Object.keys(localStorage).filter(k => k.startsWith('var_')).forEach(k => localStorage.removeItem(k));
-const cd = JSON.parse(localStorage.getItem('charData') || '{}');
-localStorage.setItem('stats', JSON.stringify(cd.initialStats || DEFAULT_STATS));
+// 새 게임 시작일 때만 초기화 (커마→게임 진입 시 newGame 플래그가 있음)
+// 그냥 새로고침/이어하기일 땐 ownedItems 등 유지
+const isNewGame = sessionStorage.getItem('newGame') !== null;
+if (isNewGame) {
+  sessionStorage.removeItem('newGame');
+  ['dayTime','ownedItems','currentItem','eventCounts','eventChoices'].forEach(k => localStorage.removeItem(k));
+  Object.keys(localStorage).filter(k => k.startsWith('var_')).forEach(k => localStorage.removeItem(k));
+  const cd = JSON.parse(localStorage.getItem('charData') || '{}');
+  localStorage.setItem('stats', JSON.stringify(cd.initialStats || DEFAULT_STATS));
+}
   },
 
   /* 슬롯 썸네일에 엄마 얼굴 */
