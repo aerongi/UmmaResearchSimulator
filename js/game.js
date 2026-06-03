@@ -106,7 +106,7 @@ const rug=new THREE.Mesh(new THREE.PlaneGeometry(3.5,2.6),
   new THREE.MeshStandardMaterial({color:0x8899bb,roughness:1}));
 rug.rotation.x=-Math.PI/2; rug.position.set(0.5,0.003,0.5); rug.receiveShadow=true; scene.add(rug);
 place(box3(0.08,1.6,0.08,0xc0b090),-4.8,0.8,0.8);
-place(box3(0.35,0.3,0.35,0xffe8b0),-4.8,1.7,0.8);
+place(box3(0.35,0.3,0.35,0xc9b89a),-4.8,1.7,0.8);   // 스탠드 갓: 밝은 노랑(ffe8b0)→차분한 베이지
 // 스탠드 광원 제거 (계속 너무 밝아서 아예 끔)
 place(box3(0.24,0.22,0.24,0x7a5c38),4.8,0.11,-3.8);
 const plant=new THREE.Mesh(new THREE.SphereGeometry(0.28,8,6),
@@ -279,6 +279,25 @@ function scheduleBlink() {
   }, delay);
 }
 scheduleBlink();
+
+/* ══════════════════════════════════════════
+   [테스트용] 소파 버튼 — 즉시 소파로 가서 앉/눕 (배포 전 삭제)
+══════════════════════════════════════════ */
+(function () {
+  const btn = document.getElementById('sofa-btn');
+  if (!btn) return;
+  let mode = 0; // 0=앉기, 1=눕기 토글
+  btn.addEventListener('click', () => {
+    isSitting = false; isLying = false;
+    pickNewTarget._goingSofa = false;
+    charGroup.position.x = SOFA.x;
+    charGroup.position.z = SOFA.z;   // 즉시 소파로 순간이동
+    if (mode === 0) { isSitting = true; } else { isLying = true; }
+    sitTimer = 9999;                 // 버튼으로 확인하는 동안 계속 유지
+    mode = 1 - mode;                 // 다음 클릭은 반대 자세
+    console.log('소파 테스트:', isSitting ? '앉기' : '눕기', 'pos=', charGroup.position.x, charGroup.position.z);
+  });
+})();
 
 /* ══════════════════════════════════════════
    웃음 버튼
