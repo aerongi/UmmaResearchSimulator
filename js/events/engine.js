@@ -254,15 +254,18 @@ window.EventEngine = (() => {
 
     if (line.end)        { endEvent(line); return; }
     if (line.choice)     { showChoices(line.choice); return; }
+    if (line.multiChoice){ showMultiChoice(line.multiChoice); return; }
     if (line.itemReveal) { showItemReveal(line.itemReveal, line.description); return; }
     if (line.textInput)  { showTextInput(line.textInput); return; }
     if (line.branch)     { handleBranch(line); return; }
     if (line.npcEnter)   { npcEnter(line.npcEnter); return; }
+    if (line.npcRename)  { if (currentNPC) currentNPC.name = line.npcRename; nextLine(); return; }
     if (line.npcExit)    { npcExit(); return; }
     if (line.propShow)   { propShow(line.propShow); return; }
     if (line.propExit)   { propHide(); return; }
     if (line.setBg)      { setBg(line.setBg); return; }
     if (line.stats)      { applyStats(line.stats); return; }
+    if (line.clearVars)  { line.clearVars.forEach(k => localStorage.removeItem('var_' + k)); nextLine(); return; }
     if (line.goto)       { dialogQueue = [...cfg.dialogues[line.goto]]; dialogIdx = 0; nextLine(); return; }
     if (line.narration)  { showNarration(line.narration); return; }
 
@@ -369,6 +372,51 @@ window.EventEngine = (() => {
         });
       });
     }
+  }
+
+  /* ── 복수선택 (정해진 수만큼 고르면 진행) ── */
+  function showMultiChoice(mc) {
+    inChoice = true;
+    const pick = mc.pick || 1;            // 골라야 하는 개수
+    const options = mc.options || [];
+    const selected = new Set();
+    const list = document.getElementById('choice-list');
+    list.innerHTML = '';
+
+    options.forEach(opt => {
+      const btn = document.createElement('button');
+      btn.className = 'choice-btn';
+      btn.dataset.choiceId = opt.id || opt.text;
+      btn.innerHTML = `<span class="choice-label">${opt.text}</span>`;
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        const id = opt.id || opt.text;
+        if (selected.has(id)) {              // 이미 골랐으면 → 취소(색 원복)
+          selected.delete(id);
+          btn.classList.remove('mc-selected');
+        } else {
+          if (selected.size >= pick) return; // 정원 다 차면 더 못 고름
+          selected.add(id);
+          btn.classList.add('mc-selected');
+        }
+        // 정해진 수만큼 고르면 진행
+        if (selected.size === pick) {
+          inChoice = false;
+          options.forEach(o => {
+            const oid = o.id || o.text;
+            if (!selected.has(oid)) return;
+            if (o.set) { for (const k in o.set) localStorage.setItem('var_' + k, o.set[k]); }
+            if (o.stats) addStats(o.stats);
+            if (window.Stats && o.id) Stats.recordChoice(cfg.id, o.id);
+          });
+          document.getElementById('choice-overlay').style.display = 'none';
+          nextLine();
+        }
+      });
+      list.appendChild(btn);
+    });
+
+    document.getElementById('choice-overlay').style.display = 'flex';
   }
 
   function showItemReveal(itemName, description) {
@@ -540,6 +588,11 @@ window.EventEngine = (() => {
       }
       .choice-btn:hover { background: white; }
       .choice-btn:active { transform: scale(0.96); }
+      .choice-btn.mc-selected {
+        background: #FFE9A8;
+        border-color: #E6A817;
+        color: #6B4A00;
+      }
       .choice-label { position: relative; z-index: 1; }
       .choice-btn.has-stat::before {
         content: ''; position: absolute; top: 0; left: 0; bottom: 0;
