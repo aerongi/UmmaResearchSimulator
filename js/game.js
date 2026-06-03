@@ -454,7 +454,7 @@ function spawnPet(name) {
   const sz = (Math.random() - 0.5) * (RD - PET_MARGIN * 2);
   sprite.position.set(sx, 0.35, sz);
   scene.add(sprite);
-  pets.push({ sprite, tx: sx, tz: sz, timer: 0, baseScaleX: 0.7 });
+  pets.push({ name, sprite, tx: sx, tz: sz, timer: 0, baseScaleX: 0.7 });
 }
 
 function pickPetTarget(p) {
@@ -473,9 +473,15 @@ function updatePets(t, dt) {
     if (dist > 0.06) {
       p.sprite.position.x += (dx/dist) * PET_SPEED;
       p.sprite.position.z += (dz/dist) * PET_SPEED;
-      // 화면 오른쪽(+x)으로 이동하면 좌우반전 (기본은 왼쪽 바라봄)
+      // 좌우반전: Sprite는 scale.x 음수가 안 먹어서 텍스처 UV를 뒤집음
+      // 기본은 왼쪽을 봄. 오른쪽(+x)으로 이동하면 텍스처 반전
       if (Math.abs(dx) > 0.02) {
-        p.sprite.scale.x = (dx > 0 ? -1 : 1) * p.baseScaleX;
+        const map = p.sprite.material.map;
+        if (map) {
+          const faceRight = dx > 0;
+          if (faceRight) { map.repeat.x = -1; map.offset.x = 1; }
+          else           { map.repeat.x = 1;  map.offset.x = 0; }
+        }
       }
       p.sprite.position.y = 0.35 + Math.abs(Math.sin(t * 10)) * 0.05;  // 쫑쫑 바운스
     } else {
@@ -484,12 +490,17 @@ function updatePets(t, dt) {
   }
 }
 
-// 보유 아이템 중 펫 등장
+// 보유 아이템 중 펫 등장. 같은 펫 여러 마리 가능(개수만큼).
+// 이벤트 후 다시 불러도 이미 떠 있는 만큼은 건너뛰고 새로 늘어난 것만 추가.
 function loadPets() {
   let owned = [];
   try { owned = JSON.parse(localStorage.getItem('ownedItems') || '[]'); } catch(e) {}
   const names = owned.map(it => (it && it.name) ? it.name : it).filter(Boolean);
-  PET_ITEMS.forEach(petName => { if (names.includes(petName)) spawnPet(petName); });
+  PET_ITEMS.forEach(petName => {
+    const want = names.filter(n => n === petName).length;   // 보유 마릿수
+    const have = pets.filter(p => p.name === petName).length; // 이미 떠 있는 수
+    for (let i = have; i < want; i++) spawnPet(petName);     // 모자란 만큼만 추가
+  });
 }
 loadPets();
 
@@ -780,6 +791,7 @@ window.exitEvent = () => {
   document.getElementById('outing-screen').classList.remove('visible');
   document.getElementById('outdoor-screen').classList.remove('visible');
   document.getElementById('back-btn').classList.remove('visible');
+	loadPets();   // 이벤트에서 새로 얻은 펫 즉시 반영 (새로고침 불필요)
 	setTimeout(maybeRandomEvent, 600);
 };
 
