@@ -56,7 +56,7 @@ window.event_park = EventEngine.create({
     Park: [
       { setBg: 'park1' },
       { narration: '엄마와 함께 공원에 나왔다. 날도 맑고 풍경도 예쁘다!' },
-      { speaker: 'mom', text: '우리 {child}랑 밖에도 나오고 너무 좋네~', expression: 'smile' },
+      { speaker: 'mom', text: '우리 {child}이랑 밖에도 나오고 너무 좋네~', expression: 'smile' },
       { branch: 'momEI', cases: {
         E: [ { speaker: 'mom', text: '나온 김에 자전거 타고 한 바퀴 돌까?' } ],
         I: [ { speaker: 'mom', text: '자리 깔고 앉아서 책이나 읽을까?' } ],
