@@ -90,7 +90,7 @@ place(box3(2.2,0.07,1.0,0xc8a878),3.5,0.8,-2.5);
 place(box3(0.5,0.025,0.36,0x3a3a3a),3.4,0.843,-2.45);
 const scr=box3(0.48,0.3,0.025,0x1a1a2e); scr.rotation.x=-0.28; place(scr,3.4,0.99,-2.63);
 place(box3(0.72,0.06,0.65,0x6688aa),3.5,0.52,-1.6);
-place(box3(0.72,0.72,0.07,0x6688aa),3.5,0.88,-1.93);
+place(box3(0.72,0.72,0.07,0x6688aa),3.5,0.88,-1.27);  // 등받이: 좌석 앞쪽(-1.27)으로 → 책상 보고 앉게 (180도 수정)
 [[0.3,0.28],[0.3,-0.28],[-0.3,0.28],[-0.3,-0.28]].forEach(([dx,dz])=>place(box3(0.06,0.5,0.06,0x557799),3.5+dx,0.25,-1.6+dz));
 place(box3(2.6,0.3,0.9,0x8a7060),-3,0.3,-3.5);
 place(box3(2.6,0.6,0.2,0x7a6050),-3,0.6,-3.9);
@@ -107,7 +107,8 @@ const rug=new THREE.Mesh(new THREE.PlaneGeometry(3.5,2.6),
 rug.rotation.x=-Math.PI/2; rug.position.set(0.5,0.003,0.5); rug.receiveShadow=true; scene.add(rug);
 place(box3(0.08,1.6,0.08,0xc0b090),-4.8,0.8,0.8);
 place(box3(0.35,0.3,0.35,0xffe8b0),-4.8,1.7,0.8);
-const sl2=new THREE.PointLight(0xffdd88,1.2,7); sl2.position.set(-4.8,1.75,0.8); scene.add(sl2);
+// 스탠드 광원: 과하게 밝던 1.2 → 은은하게 0.25 (범위도 7→4)
+const sl2=new THREE.PointLight(0xffdd88,0.25,4); sl2.position.set(-4.8,1.75,0.8); scene.add(sl2);
 place(box3(0.24,0.22,0.24,0x7a5c38),4.8,0.11,-3.8);
 const plant=new THREE.Mesh(new THREE.SphereGeometry(0.28,8,6),
   new THREE.MeshStandardMaterial({color:0x3a8040,roughness:0.85}));
@@ -378,7 +379,23 @@ const MOVE_SPEED = 0.012;
 const ROOM_MARGIN = 1.5;
 const CAM_SAFE_DIST = 3.5; // 카메라에서 이 거리 이내로 못 들어옴
 
+/* ── 소파 ── */
+// 소파 좌석 중심 (가구: place(box3(2.6,0.3,0.9),-3,0.3,-3.5))
+const SOFA = { x: -3, z: -3.0, sitY: 0.55 };  // 앉을 위치 (앞쪽 살짝, 앉은 높이)
+let isSitting = false;       // 지금 앉아있나
+let sitTimer = 0;            // 앉아있는 시간 카운트다운
+
 function pickNewTarget() {
+  isSitting = false;
+  // 가끔(25%) 소파로 가서 앉기
+  if (Math.random() < 0.25) {
+    targetX = SOFA.x;
+    targetZ = SOFA.z;
+    moveTimer = 999;          // 도착할 때까지 목표 유지 (도착 시 앉음 처리)
+    pickNewTarget._goingSofa = true;
+    return;
+  }
+  pickNewTarget._goingSofa = false;
   // 방 안에서 랜덤 위치 선택
   let tx, tz, attempts = 0;
   do {
@@ -396,6 +413,64 @@ function pickNewTarget() {
 }
 
 pickNewTarget();
+
+/* ══════════════════════════════════════════
+   펫 시스템 (PNG 빌보드, 랜덤 이동, 여러 마리)
+   - ownedItems 중 PET_ITEMS에 있는 이름이면 펫으로 등장
+   - 기본 왼쪽을 봄, 화면 오른쪽으로 이동하면 좌우반전
+══════════════════════════════════════════ */
+const PET_ITEMS = ['dog', 'cat'];   // 펫으로 취급할 아이템 이름 (assets/pets/이름.png). 추가하면 여기에.
+const PET_SPEED = 0.018;
+const PET_MARGIN = 1.2;
+const pets = [];
+
+function spawnPet(name) {
+  const tex = new THREE.TextureLoader().load(`assets/pets/${name}.png`);
+  const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false });
+  const sprite = new THREE.Sprite(mat);
+  sprite.scale.set(0.7, 0.7, 1);          // 펫 크기 (baseScaleX = 0.7)
+  const sx = (Math.random() - 0.5) * (RW - PET_MARGIN * 2);
+  const sz = (Math.random() - 0.5) * (RD - PET_MARGIN * 2);
+  sprite.position.set(sx, 0.35, sz);
+  scene.add(sprite);
+  pets.push({ sprite, tx: sx, tz: sz, timer: 0, baseScaleX: 0.7 });
+}
+
+function pickPetTarget(p) {
+  p.tx = (Math.random() - 0.5) * (RW - PET_MARGIN * 2);
+  p.tz = (Math.random() - 0.5) * (RD - PET_MARGIN * 2);
+  p.timer = 2 + Math.random() * 4;        // 2~6초마다 새 목표
+}
+
+function updatePets(t, dt) {
+  for (const p of pets) {
+    p.timer -= dt;
+    if (p.timer <= 0) pickPetTarget(p);
+    const dx = p.tx - p.sprite.position.x;
+    const dz = p.tz - p.sprite.position.z;
+    const dist = Math.sqrt(dx*dx + dz*dz);
+    if (dist > 0.06) {
+      p.sprite.position.x += (dx/dist) * PET_SPEED;
+      p.sprite.position.z += (dz/dist) * PET_SPEED;
+      // 화면 오른쪽(+x)으로 이동하면 좌우반전 (기본은 왼쪽 바라봄)
+      if (Math.abs(dx) > 0.02) {
+        p.sprite.scale.x = (dx > 0 ? -1 : 1) * p.baseScaleX;
+      }
+      p.sprite.position.y = 0.35 + Math.abs(Math.sin(t * 10)) * 0.05;  // 쫑쫑 바운스
+    } else {
+      p.sprite.position.y = 0.35;
+    }
+  }
+}
+
+// 보유 아이템 중 펫 등장
+function loadPets() {
+  let owned = [];
+  try { owned = JSON.parse(localStorage.getItem('ownedItems') || '[]'); } catch(e) {}
+  const names = owned.map(it => (it && it.name) ? it.name : it).filter(Boolean);
+  PET_ITEMS.forEach(petName => { if (names.includes(petName)) spawnPet(petName); });
+}
+loadPets();
 
 /* ── Animation ──────────────────────────────────────── */
 const clock=new THREE.Clock();
@@ -415,6 +490,21 @@ handR.position.y = 0.65 + Math.sin(t*1.1 - 0.5)*0.04;
 
 /* ── 이동 업데이트 ── */
 const dt = 0.016;
+
+updatePets(t, dt);   // 펫들 갱신 (앉아있든 걷든 항상)
+
+if (isSitting) {
+  // 앉아있는 동안: 소파 위치 고정, 시간 지나면 일어남
+  sitTimer -= dt;
+  charGroup.position.x = SOFA.x;
+  charGroup.position.z = SOFA.z;
+  charGroup.position.y = -0.18;            // 살짝 내려앉은 느낌
+  charGroup.rotation.y = 0;                // 정면(카메라쪽) 보고 앉기
+  if (sitTimer <= 0) { isSitting = false; pickNewTarget(); }
+  renderer.render(scene,camera);
+  return;
+}
+
 moveTimer -= dt;
 if (moveTimer <= 0) pickNewTarget();
 
@@ -429,6 +519,11 @@ if (dist > 0.08) {
   charGroup.position.z += (dz/dist) * MOVE_SPEED;
   // 이동 방향으로 캐릭터 회전
   charGroup.rotation.y = Math.atan2(dx, dz);
+} else if (pickNewTarget._goingSofa) {
+  // 소파에 도착 → 앉기 시작
+  isSitting = true;
+  sitTimer = 5 + Math.random() * 5;        // 5~10초 앉아있기
+  pickNewTarget._goingSofa = false;
 }
 
 // 걷기 뽀용뽀용 (위아래 바운스)
@@ -581,9 +676,18 @@ document.querySelectorAll('.outdoor-place').forEach(btn => {
     const eventMap = {
       restaurant: 'restaurant',
       mart: 'mart',
-      movie: 'movie', // dept: 'dept', street: 'street', park: 'park',  // 만들면 주석 해제
+      movie: 'movie', // dept: 'dept', park: 'park',  // 만들면 주석 해제
     };
-    const ev = eventMap[place];
+
+    let ev = eventMap[place];
+
+    // 거리: 누를 때마다 street1~N 중 랜덤
+    if (place === 'street') {
+      const STREET_COUNT = 3;           // 거리 이벤트 개수 (street1.js ~ street3.js)
+      const n = Math.floor(Math.random() * STREET_COUNT) + 1;
+      ev = 'street' + n;
+    }
+
     if (!ev) return;                       // 아직 안 만든 장소는 무시
     doWipeIn(() => {
       outdoorScreen.classList.remove('visible');
@@ -646,32 +750,6 @@ window.exitEvent = () => {
   document.getElementById('back-btn').classList.remove('visible');
 	setTimeout(maybeRandomEvent, 600);
 };
-
-/* ── 일자/시간 HUD ── */
-function ensureDayTimeEl() {
-  let el = document.getElementById('day-time');
-  if (el) return el;
-  el = document.createElement('div');
-  el.id = 'day-time';
-  el.style.cssText = `
-    position:absolute; top:20px; left:24px;
-    background:rgba(0,0,0,0.5); color:white;
-    padding:10px 22px; border-radius:22px;
-    font-size:16px; font-weight:800;
-    letter-spacing:1px; backdrop-filter:blur(8px);
-    z-index:50;
-  `;
-  document.getElementById('game-screen').appendChild(el);
-  return el;
-}
-window.refreshDayTime = function() {
-  const el = ensureDayTimeEl();
-  let dt;
-  try { dt = JSON.parse(localStorage.getItem('dayTime') || '{"day":1,"time":"morning"}'); }
-  catch(e) { dt = { day:1, time:'morning' }; }
-  el.textContent = `${dt.day}일차 - ${dt.time === 'morning' ? '오전' : '오후'}`;
-};
-window.refreshDayTime();
 
 /* ── 일자/시간 HUD ── */
 function ensureDayTimeEl() {
