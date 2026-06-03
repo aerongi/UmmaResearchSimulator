@@ -63,9 +63,9 @@ window.event_park = EventEngine.create({
       } },
       { speaker: 'me', text: '(엄마랑 같이 시간을 보내려는데…)' },
 
+      { setBg: 'park2' },          // 빗소리와 동시에 흐린 배경으로
       { narration: '(빗소리)' },
-      { speaker: 'mom', text: '어머나? 아까까진 그렇게 맑았는데…' },
-      { setBg: 'park2' },          // 흐린 공원 배경
+      { speaker: 'mom', text: '어머나? 아까까진 그렇게 맑았는데…', expression: 'default' },
       { narration: '갑자기 날씨가 흐려지더니 비가 오기 시작했다.' },
 
       { branch: 'var:hasUmbrella', cases: {
