@@ -286,16 +286,15 @@ scheduleBlink();
 (function () {
   const btn = document.getElementById('sofa-btn');
   if (!btn) return;
-  let mode = 0; // 0=앉기, 1=눕기 토글
+  let mode = 0; // 0=앉기, 1=눕기
   btn.addEventListener('click', () => {
     isSitting = false; isLying = false;
     pickNewTarget._goingSofa = false;
     charGroup.position.x = SOFA.x;
-    charGroup.position.z = SOFA.z;   // 즉시 소파로 순간이동
+    charGroup.position.z = SOFA.z;
     if (mode === 0) { isSitting = true; } else { isLying = true; }
-    sitTimer = 9999;                 // 버튼으로 확인하는 동안 계속 유지
-    mode = 1 - mode;                 // 다음 클릭은 반대 자세
-    console.log('소파 테스트:', isSitting ? '앉기' : '눕기', 'pos=', charGroup.position.x, charGroup.position.z);
+    sitTimer = 9999;
+    mode = 1 - mode;
   });
 })();
 
@@ -400,6 +399,8 @@ const CAM_SAFE_DIST = 3.5; // 카메라에서 이 거리 이내로 못 들어옴
 /* ── 소파 ── */
 // 소파 좌석 중심 (가구: place(box3(2.6,0.3,0.9),-3,0.3,-3.5))
 const SOFA = { x: -3, z: -3.4, sitY: 0.55 };  // 더 뒤로 (z -3.0 → -3.4)
+// 눕기 조정값: dx=화면 오른쪽으로 이동량(+), y=높이
+const LIE = { dx: 0.9, y: 0.55 };
 let isSitting = false;       // 지금 앉아있나
 let isLying = false;         // 지금 누워있나
 let sitTimer = 0;            // 앉기/눕기 시간 카운트다운
@@ -516,15 +517,17 @@ updatePets(t, dt);   // 펫들 갱신 (앉아있든 걷든 항상)
 if (isSitting || isLying) {
   // 소파에서 앉기/눕기: 위치 고정, 시간 지나면 일어남
   sitTimer -= dt;
-  charGroup.position.x = SOFA.x;
-  charGroup.position.z = SOFA.z;
   if (isLying) {
-    charGroup.position.y = 0.55;           // 소파 위에 눕도록 올림 (바닥 뚫림 방지)
+    charGroup.position.x = SOFA.x + LIE.dx;  // 눕기: 오른쪽으로 이동 (팔걸이 안 뚫게)
+    charGroup.position.z = SOFA.z;
+    charGroup.position.y = LIE.y;
     charGroup.rotation.y = 0;
-    charGroup.rotation.z = Math.PI / 2;    // 옆으로 눕기 (90도)
+    charGroup.rotation.z = Math.PI / 2;      // 옆으로 눕기 (90도)
   } else {
-    charGroup.position.y = -0.18;          // 앉으면 살짝 내려앉음
-    charGroup.rotation.y = 0;              // 정면 보고 앉기
+    charGroup.position.x = SOFA.x;
+    charGroup.position.z = SOFA.z;
+    charGroup.position.y = -0.18;            // 앉으면 살짝 내려앉음
+    charGroup.rotation.y = 0;                // 정면 보고 앉기
     charGroup.rotation.z = 0;
   }
   if (sitTimer <= 0) { isSitting = false; isLying = false; charGroup.rotation.z = 0; pickNewTarget(); }
