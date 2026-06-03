@@ -359,6 +359,12 @@
       cursor: pointer;
       transition: transform 0.1s;
     }
+	#intro-go-btn:disabled {
+      background: #ccc;
+      color: #888;
+      border-color: #aaa;
+      cursor: not-allowed;
+    }
     #intro-go-btn:active { transform: scale(0.94); }
   </style>
 </head>
@@ -445,7 +451,7 @@
   <!-- 인트로 게이트 -->
   <div id="intro-gate">
     <div class="intro-text">엄마와의 일주일이 시작된다!</div>
-    <button id="intro-go-btn">GO! →</button>
+    <button id="intro-go-btn" disabled>로딩 중...</button>
   </div>
 
   <!-- 라이브러리 & 게임 스크립트 -->
@@ -460,21 +466,32 @@
 
   <!-- BGM + 인트로 게이트 -->
   <audio id="bgm" src="assets/audio/daily.mp3" loop></audio>
-  <script>
-    const bgm = document.getElementById('bgm');
-    const gate = document.getElementById('intro-gate');
-    bgm.volume = 0.3;
-    document.getElementById('intro-go-btn').addEventListener('click', () => {
-      bgm.play();
-      gate.classList.add('hidden');
-      setTimeout(() => gate.remove(), 500);
-    }, { once: true });
+<script>
+  const bgm = document.getElementById('bgm');
+  const gate = document.getElementById('intro-gate');
+  const goBtn = document.getElementById('intro-go-btn');
+  bgm.volume = 0.3;
 
-  // 통계창 등 다른 페이지 갔다 돌아왔을 때 — 첫 상호작용에 BGM 복구
+  (async () => {
+    try {
+      const cd = JSON.parse(localStorage.getItem('charData') || '{}');
+      await FaceParts.preloadFace(cd);
+    } catch (e) { console.warn('preload', e); }
+    goBtn.disabled = false;
+    goBtn.textContent = 'GO! →';
+  })();
+
+  goBtn.addEventListener('click', () => {
+    if (goBtn.disabled) return;
+    bgm.play();
+    gate.classList.add('hidden');
+    setTimeout(() => gate.remove(), 500);
+  }, { once: true });
+
   document.addEventListener('click', () => {
     if (bgm.paused) bgm.play().catch(() => {});
   });
-  </script>
+</script>
 
   <!-- 온라인 통계 토글 저장 -->
   <script>
