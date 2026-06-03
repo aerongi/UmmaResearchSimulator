@@ -422,10 +422,8 @@ window.EventEngine = (() => {
   function showItemReveal(itemName, description) {
     inReveal = true;
     const owned = JSON.parse(localStorage.getItem('ownedItems') || '[]');
-    if (!owned.find(it => it && it.name === itemName)) {
-      owned.push({ name: itemName, source: cfg.id });
-      localStorage.setItem('ownedItems', JSON.stringify(owned));
-    }
+    owned.push({ name: itemName, source: cfg.id });   // 중복 허용 (같은 아이템 여러 개 가능)
+    localStorage.setItem('ownedItems', JSON.stringify(owned));
     const ov = document.createElement('div');
     ov.id = 'item-reveal';
     ov.innerHTML = `
