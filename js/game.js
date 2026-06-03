@@ -107,8 +107,7 @@ const rug=new THREE.Mesh(new THREE.PlaneGeometry(3.5,2.6),
 rug.rotation.x=-Math.PI/2; rug.position.set(0.5,0.003,0.5); rug.receiveShadow=true; scene.add(rug);
 place(box3(0.08,1.6,0.08,0xc0b090),-4.8,0.8,0.8);
 place(box3(0.35,0.3,0.35,0xffe8b0),-4.8,1.7,0.8);
-// 스탠드 광원: 과하게 밝던 1.2 → 은은하게 0.25 (범위도 7→4)
-const sl2=new THREE.PointLight(0xffdd88,0.25,4); sl2.position.set(-4.8,1.75,0.8); scene.add(sl2);
+// 스탠드 광원 제거 (계속 너무 밝아서 아예 끔)
 place(box3(0.24,0.22,0.24,0x7a5c38),4.8,0.11,-3.8);
 const plant=new THREE.Mesh(new THREE.SphereGeometry(0.28,8,6),
   new THREE.MeshStandardMaterial({color:0x3a8040,roughness:0.85}));
@@ -381,17 +380,19 @@ const CAM_SAFE_DIST = 3.5; // 카메라에서 이 거리 이내로 못 들어옴
 
 /* ── 소파 ── */
 // 소파 좌석 중심 (가구: place(box3(2.6,0.3,0.9),-3,0.3,-3.5))
-const SOFA = { x: -3, z: -3.0, sitY: 0.55 };  // 앉을 위치 (앞쪽 살짝, 앉은 높이)
+const SOFA = { x: -3, z: -3.4, sitY: 0.55 };  // 더 뒤로 (z -3.0 → -3.4)
 let isSitting = false;       // 지금 앉아있나
-let sitTimer = 0;            // 앉아있는 시간 카운트다운
+let isLying = false;         // 지금 누워있나
+let sitTimer = 0;            // 앉기/눕기 시간 카운트다운
 
 function pickNewTarget() {
   isSitting = false;
-  // 가끔(25%) 소파로 가서 앉기
+  isLying = false;
+  // 가끔(25%) 소파로 가기
   if (Math.random() < 0.25) {
     targetX = SOFA.x;
     targetZ = SOFA.z;
-    moveTimer = 999;          // 도착할 때까지 목표 유지 (도착 시 앉음 처리)
+    moveTimer = 999;          // 도착할 때까지 목표 유지
     pickNewTarget._goingSofa = true;
     return;
   }
@@ -493,14 +494,21 @@ const dt = 0.016;
 
 updatePets(t, dt);   // 펫들 갱신 (앉아있든 걷든 항상)
 
-if (isSitting) {
-  // 앉아있는 동안: 소파 위치 고정, 시간 지나면 일어남
+if (isSitting || isLying) {
+  // 소파에서 앉기/눕기: 위치 고정, 시간 지나면 일어남
   sitTimer -= dt;
   charGroup.position.x = SOFA.x;
   charGroup.position.z = SOFA.z;
-  charGroup.position.y = -0.18;            // 살짝 내려앉은 느낌
-  charGroup.rotation.y = 0;                // 정면(카메라쪽) 보고 앉기
-  if (sitTimer <= 0) { isSitting = false; pickNewTarget(); }
+  if (isLying) {
+    charGroup.position.y = -0.05;
+    charGroup.rotation.y = 0;
+    charGroup.rotation.z = Math.PI / 2;    // 옆으로 눕기 (90도 기울임)
+  } else {
+    charGroup.position.y = -0.18;          // 앉으면 살짝 내려앉음
+    charGroup.rotation.y = 0;              // 정면 보고 앉기
+    charGroup.rotation.z = 0;
+  }
+  if (sitTimer <= 0) { isSitting = false; isLying = false; charGroup.rotation.z = 0; pickNewTarget(); }
   renderer.render(scene,camera);
   return;
 }
@@ -520,9 +528,10 @@ if (dist > 0.08) {
   // 이동 방향으로 캐릭터 회전
   charGroup.rotation.y = Math.atan2(dx, dz);
 } else if (pickNewTarget._goingSofa) {
-  // 소파에 도착 → 앉기 시작
-  isSitting = true;
-  sitTimer = 5 + Math.random() * 5;        // 5~10초 앉아있기
+  // 소파 도착 → 50% 앉기 / 50% 눕기
+  if (Math.random() < 0.5) { isSitting = true; }
+  else                     { isLying = true; }
+  sitTimer = 5 + Math.random() * 5;        // 5~10초
   pickNewTarget._goingSofa = false;
 }
 
