@@ -71,7 +71,6 @@ window.event_park = EventEngine.create({
       { branch: 'var:hasUmbrella', cases: {
         'true': [
           { speaker: 'mom', text: '우산을 챙겨와서 다행이네~', expression: 'smile' },
-          { speaker: 'mom', text: '우리 {child}, 준비성이 어찌나 좋은지!', expression: 'smile' },
           { stats: { 애정: 2 } },
         ],
         '': [
