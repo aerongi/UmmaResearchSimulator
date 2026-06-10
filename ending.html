@@ -174,10 +174,9 @@
     max-width: 60vw; max-height: 34vh;
     margin-top: -4vh;                    /* 살짝 위로 */
     transform: translateY(60vh);         /* 처음엔 화면 아래쪽 */
-    opacity: 0;
-    transition: transform 1.8s cubic-bezier(0.22, 1, 0.36, 1), opacity 1.2s;
+    transition: transform 8s linear;     /* 크레딧과 같은 속도감으로 천천히 */
   }
-  #end-logo.up { transform: translateY(0); opacity: 1; }   /* 위로 올라와 중앙 */
+  #end-logo.up { transform: translateY(0); }   /* 위로 올라와 중앙 멈춤 */
 
   #end-buttons {
     display: flex; flex-direction: column; align-items: center; gap: 2.2vh;
@@ -625,42 +624,40 @@ function startCredits() {
 
   document.getElementById('credits-screen').classList.add('show');
 
-  // 크레딧 텍스트가 전부 위로 빠져나가도록 (53초). 
-  // display:block 직후 바로 transition을 걸면 씹히므로(=띡),
-  // 시작 위치를 먼저 한 프레임 확정한 뒤(이중 rAF) 최종 transform을 건다.
+  // 크레딧 텍스트 스크롤 (45초, 빠르게 → 로고 출발 전에 다 사라짐).
+  // display:block 직후 transition을 바로 걸면 씹히므로 이중 rAF로 시작 확정 후 적용.
   roll.style.transition = 'none';
   roll.style.transform = 'translateY(0)';
   requestAnimationFrame(() => {
-    // 강제 reflow로 시작 상태 확정
     void roll.offsetHeight;
     requestAnimationFrame(() => {
       const screenH = window.innerHeight;
       const rollH = roll.offsetHeight;
       const distance = screenH + rollH;   // 롤 전체가 화면 위로 완전히 사라짐
-      roll.style.transition = 'transform 53s linear';
+      roll.style.transition = 'transform 45s linear';
       roll.style.transform = `translateY(-${distance}px)`;
     });
   });
 
-  // 흰 화면 + 로고 슬라이드 시작 (58.2초) → 1.8초 슬라이드 → 60초에 중앙 도착
-  setTimeout(showLogoStart, 58200);
+  // 로고: 52초에 출발 → 8초간 천천히(linear) 올라옴 → 60초에 중앙 도착
+  setTimeout(showLogoStart, 52000);
 }
 
 function showLogoStart() {
   // 흰 배경 깔기
   document.getElementById('logo-set').classList.add('shown');
   const logo = document.getElementById('end-logo');
-  // 로고 슬라이드도 이중 rAF로 시작 상태 확정 후 .up 적용 (안 그러면 띡 나타남)
+  // 이중 rAF로 시작 위치(아래) 확정 후 .up 적용 → 천천히 올라옴
   requestAnimationFrame(() => {
     void logo.offsetHeight;
     requestAnimationFrame(() => {
       logo.classList.add('up');
     });
   });
-  // 로고가 중앙에 멈춘 뒤(슬라이드 1.8s + 여유) 버튼 등장
+  // 로고가 중앙에 멈춘 뒤(8초 슬라이드 + 여유) 버튼 등장
   setTimeout(() => {
     document.getElementById('end-buttons').classList.add('shown');
-  }, 2100);
+  }, 8400);
 }
 
 /* 버튼 */
