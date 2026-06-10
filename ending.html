@@ -625,13 +625,21 @@ function startCredits() {
 
   document.getElementById('credits-screen').classList.add('show');
 
-  // 크레딧 텍스트가 전부 위로 빠져나가도록 (53초 동안 → 좀 더 빠르게)
+  // 크레딧 텍스트가 전부 위로 빠져나가도록 (53초). 
+  // display:block 직후 바로 transition을 걸면 씹히므로(=띡),
+  // 시작 위치를 먼저 한 프레임 확정한 뒤(이중 rAF) 최종 transform을 건다.
+  roll.style.transition = 'none';
+  roll.style.transform = 'translateY(0)';
   requestAnimationFrame(() => {
-    const screenH = window.innerHeight;
-    const rollH = roll.offsetHeight;
-    const distance = screenH + rollH;   // 롤 전체가 화면 위로 완전히 사라짐
-    roll.style.transition = 'transform 53s linear';
-    roll.style.transform = `translateY(-${distance}px)`;
+    // 강제 reflow로 시작 상태 확정
+    void roll.offsetHeight;
+    requestAnimationFrame(() => {
+      const screenH = window.innerHeight;
+      const rollH = roll.offsetHeight;
+      const distance = screenH + rollH;   // 롤 전체가 화면 위로 완전히 사라짐
+      roll.style.transition = 'transform 53s linear';
+      roll.style.transform = `translateY(-${distance}px)`;
+    });
   });
 
   // 흰 화면 + 로고 슬라이드 시작 (58.2초) → 1.8초 슬라이드 → 60초에 중앙 도착
@@ -639,10 +647,15 @@ function startCredits() {
 }
 
 function showLogoStart() {
-  // 흰 배경 깔고, 로고가 아래에서 위로 올라옴
+  // 흰 배경 깔기
   document.getElementById('logo-set').classList.add('shown');
+  const logo = document.getElementById('end-logo');
+  // 로고 슬라이드도 이중 rAF로 시작 상태 확정 후 .up 적용 (안 그러면 띡 나타남)
   requestAnimationFrame(() => {
-    document.getElementById('end-logo').classList.add('up');
+    void logo.offsetHeight;
+    requestAnimationFrame(() => {
+      logo.classList.add('up');
+    });
   });
   // 로고가 중앙에 멈춘 뒤(슬라이드 1.8s + 여유) 버튼 등장
   setTimeout(() => {
