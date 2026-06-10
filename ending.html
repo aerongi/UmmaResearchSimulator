@@ -159,26 +159,33 @@
   #credits-roll .credit-name { color: #4a4a4a; font-size: 2.7vh; font-weight: 800; margin-bottom: 3vh; }
   #credits-roll .credit-special { color: #b5638a; font-size: 2.4vh; font-weight: 800; letter-spacing: 1px; }
 
-  /* 롤 맨 끝 로고 (사용 안 함, 호환용) */
-  #roll-logo { display: block; margin: 0 auto; max-width: 60vw; max-height: 36vh; }
-
-  /* 크레딧 후 로고+버튼 세트 (화면 전체 중앙) */
+  /* 크레딧 후: 흰 화면 위로 로고가 아래에서 슬라이드업 */
   #logo-set {
     position: fixed; inset: 0; z-index: 120;
     background: #fff;
-    display: none;
+    display: flex;
     flex-direction: column; align-items: center; justify-content: center;
     gap: 4vh;
-    opacity: 0; transition: opacity 1.2s;
+    opacity: 0; pointer-events: none;
   }
-  #logo-set.shown { display: flex; opacity: 1; }
+  #logo-set.shown { opacity: 1; pointer-events: auto; }   /* 흰 배경 등장 */
+
   #end-logo {
     max-width: 60vw; max-height: 34vh;
-    margin-top: -4vh;            /* 살짝 위로 */
+    margin-top: -4vh;                    /* 살짝 위로 */
+    transform: translateY(60vh);         /* 처음엔 화면 아래쪽 */
+    opacity: 0;
+    transition: transform 1.8s cubic-bezier(0.22, 1, 0.36, 1), opacity 1.2s;
   }
+  #end-logo.up { transform: translateY(0); opacity: 1; }   /* 위로 올라와 중앙 */
+
   #end-buttons {
     display: flex; flex-direction: column; align-items: center; gap: 2.2vh;
+    opacity: 0; transform: translateY(2vh);
+    transition: opacity 0.9s, transform 0.9s;
   }
+  #end-buttons.shown { opacity: 1; transform: translateY(0); }   /* 로고 뒤 등장 */
+
   .end-menu-btn {
     padding: 1.8vh 8vw; border-radius: 2.6vh; border: none;
     font-size: 2.2vh; font-weight: 700; font-family: inherit;
@@ -618,21 +625,29 @@ function startCredits() {
 
   document.getElementById('credits-screen').classList.add('show');
 
-  // 크레딧 텍스트가 전부 위로 빠져나가도록 (화면 밖까지 완전히)
+  // 크레딧 텍스트가 전부 위로 빠져나가도록 (53초 동안 → 좀 더 빠르게)
   requestAnimationFrame(() => {
     const screenH = window.innerHeight;
     const rollH = roll.offsetHeight;
     const distance = screenH + rollH;   // 롤 전체가 화면 위로 완전히 사라짐
-    roll.style.transition = 'transform 56s linear';
+    roll.style.transition = 'transform 53s linear';
     roll.style.transform = `translateY(-${distance}px)`;
   });
 
-  setTimeout(showLogoButtons, 58000);   // 텍스트 다 올라간 뒤 로고+버튼 등장
+  // 흰 화면 + 로고 슬라이드 시작 (58.2초) → 1.8초 슬라이드 → 60초에 중앙 도착
+  setTimeout(showLogoStart, 58200);
 }
 
-function showLogoButtons() {
-  // 크레딧 텍스트는 이미 화면 밖 → 깨끗한 화면에 로고+버튼 세트 페이드인
+function showLogoStart() {
+  // 흰 배경 깔고, 로고가 아래에서 위로 올라옴
   document.getElementById('logo-set').classList.add('shown');
+  requestAnimationFrame(() => {
+    document.getElementById('end-logo').classList.add('up');
+  });
+  // 로고가 중앙에 멈춘 뒤(슬라이드 1.8s + 여유) 버튼 등장
+  setTimeout(() => {
+    document.getElementById('end-buttons').classList.add('shown');
+  }, 2100);
 }
 
 /* 버튼 */
@@ -657,9 +672,11 @@ window.addEventListener('load', async () => {
   runScript(ENDING);
 });
 
-/* 통계에서 복귀 시: 크레딧 없이 로고+버튼 세트만 중앙에 (BGM 없이) */
+/* 통계에서 복귀 시: 크레딧 없이 로고(올라온 상태)+버튼 바로 표시 (BGM 없이) */
 function showLogoDirect() {
   document.getElementById('logo-set').classList.add('shown');
+  document.getElementById('end-logo').classList.add('up');
+  document.getElementById('end-buttons').classList.add('shown');
 }
 </script>
 
