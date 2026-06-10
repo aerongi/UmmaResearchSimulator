@@ -71,7 +71,7 @@
   <div class="top">
     <div class="sub">7일간의 연구 종료</div>
     <h1>온라인 통계</h1>
-    <button class="back-btn" onclick="history.back()">← 게임으로</button>
+    <button class="back-btn" id="back-btn" onclick="goBack()">← 게임으로</button>
   </div>
 
   <div class="sec-title"><span>👥</span> 다른 플레이어와 비교하기</div>
@@ -87,6 +87,20 @@
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <script src="js/firebase.js"></script>
 <script>
+/* ── 뒤로가기: 엔딩에서 왔으면 엔딩으로, 아니면 게임으로 ── */
+function goBack() {
+  if (sessionStorage.getItem('statsFrom') === 'ending') {
+    location.href = 'ending.html';
+  } else {
+    location.href = 'game.html';
+  }
+}
+// 출처에 따라 버튼 라벨 조정
+if (sessionStorage.getItem('statsFrom') === 'ending') {
+  const b = document.getElementById('back-btn');
+  if (b) b.textContent = '← 엔딩으로';
+}
+
 /* ── 이벤트/선택지 정의 (표시용 라벨) ── */
 const EVENT_GROUPS = [
   { group: '외출', events: [
@@ -128,6 +142,12 @@ async function renderCompare() {
   // 성별
   const ds = agg.childType.daughter || 0, sn = agg.childType.son || 0, ct = ds + sn;
   const dPct = pct(ds, ct), sPct = 100 - dPct;
+  const genderHtml = ct === 0
+    ? `<div class="muted">아직 데이터 없음</div>`
+    : `<div class="splitbar">
+         <div class="seg" style="flex:0 0 ${dPct}%; background:#F4C0D1; color:#72243E;">딸 ${dPct}%</div>
+         <div class="seg" style="flex:0 0 ${sPct}%; background:#B5D4F4; color:#0C447C; justify-content:flex-end;">${sPct}% 아들</div>
+       </div>`;
 
   // 최종 스탯 평균
   const cnt = agg.finalStatsSum._count || 0;
@@ -141,10 +161,7 @@ async function renderCompare() {
     <div class="card">
       <div class="card-head"><span class="lbl">자식 성별</span>
         <span class="mine">당신: <b>${myChild === 'son' ? '아들' : '딸'}</b></span></div>
-      <div class="splitbar">
-        <div class="seg" style="flex:0 0 ${dPct}%; background:#F4C0D1; color:#72243E;">딸 ${dPct}%</div>
-        <div class="seg" style="flex:0 0 ${sPct}%; background:#B5D4F4; color:#0C447C; justify-content:flex-end;">${sPct}% 아들</div>
-      </div>
+      ${genderHtml}
     </div>
 
     <div class="card">

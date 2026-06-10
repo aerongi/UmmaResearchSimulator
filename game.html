@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>우리 집</title>
+  <title>나의 공간</title>
   <link rel="stylesheet" href="css/style.css">
   <style>
     .proto-btns {
@@ -446,6 +446,7 @@
     <button id="speak-btn" class="proto-btn">💬 말하기</button>
     <button id="smile-btn" class="proto-btn">😊 웃기</button>
     <button id="sofa-btn" class="proto-btn" style="background:#C9A0DC;color:#3a2a4a;">🛋️ 소파(테스트)</button>
+    <button id="ending-btn" class="proto-btn" style="background:#F4A0A0;color:#5a2a2a;">🎬 엔딩(테스트)</button>
   </div>
   </div>
 
@@ -461,9 +462,9 @@
   <script src="js/firebase.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="js/parts.js"></script>
-  <script src="js/save.js?v=2"></script>
-  <script src="js/events/engine.js?v=2"></script>
-  <script src="js/game.js?v=2"></script>
+  <script src="js/save.js"></script>
+  <script src="js/events/engine.js"></script>
+  <script src="js/game.js"></script>
 
   <!-- BGM + 인트로 게이트 -->
   <audio id="bgm" src="assets/audio/daily.mp3" loop></audio>
@@ -490,7 +491,10 @@
   }, { once: true });
 
   document.addEventListener('click', () => {
-    if (bgm.paused) bgm.play().catch(() => {});
+    // 이벤트 BGM이 재생 중이면 메인 BGM 복구하지 않음 (브금 섞임 방지)
+    const evBgm = document.getElementById('event-bgm');
+    const eventPlaying = evBgm && !evBgm.paused;
+    if (bgm.paused && !eventPlaying) bgm.play().catch(() => {});
   });
 </script>
 

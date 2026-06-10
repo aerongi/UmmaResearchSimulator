@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>엔딩</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #000; font-family: inherit; }
+
+  #ending-stage {
+    position: fixed; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden; cursor: pointer;
+  }
+
+  /* 배경 레이어 */
+  #end-bg {
+    position: absolute; inset: 0;
+    background: #ffffff;
+    transition: background 1.2s;
+  }
+  #end-bg.rainbow { animation: pastel-cycle 45s linear infinite; }
+
+  /* 하트 배경 (3색 핑크가 위로 뿅뿅) */
+  #heart-field {
+    position: absolute; inset: 0; overflow: hidden;
+    opacity: 0; transition: opacity 1s; pointer-events: none; z-index: 2;
+  }
+  #heart-field.on { opacity: 1; }
+  .heart {
+    position: absolute; bottom: -8vh;
+    font-size: 4vh; line-height: 1;
+    animation: heart-rise linear infinite;
+    will-change: transform, opacity;
+  }
+  @keyframes heart-rise {
+    0%   { transform: translateY(0) scale(0.8) rotate(-8deg); opacity: 0; }
+    12%  { opacity: 1; }
+    88%  { opacity: 1; }
+    100% { transform: translateY(-115vh) scale(1.1) rotate(8deg); opacity: 0; }
+  }
+
+  /* 엄마 얼굴 캔버스 (중앙) */
+  #mom-canvas {
+    position: relative; z-index: 4;
+    height: 60vh; width: auto;
+    margin-bottom: 14vh;
+    opacity: 0; transition: opacity 1.2s;
+    pointer-events: none;
+  }
+  #mom-canvas.shown { opacity: 1; }
+
+  /* 박사 */
+  #doctor-end {
+    position: relative; z-index: 4;
+    max-height: 58vh; margin-bottom: 16vh;
+    opacity: 0; transition: opacity 0.8s;
+    pointer-events: none;
+    animation: doctor-float 3s ease-in-out infinite;
+  }
+  #doctor-end.shown { opacity: 1; }
+
+  /* 대사 박스 (인트로와 동일 톤) */
+  #end-dialog-box {
+    position: absolute; bottom: 4vh; left: 50%;
+    transform: translateX(-50%);
+    width: 86%; max-width: 1100px; min-height: 15vh;
+    background: rgba(255,255,255,0.94);
+    border-radius: 4vh; padding: 3.5vh 4vw;
+    box-shadow: 0 1vh 3vh rgba(0,0,0,0.18);
+    z-index: 6; display: none;
+    flex-direction: column; justify-content: center;
+  }
+  #end-dialog-box.show { display: flex; }
+  #end-speaker {
+    position: absolute; top: -2.2vh; left: 4vw;
+    padding: 1vh 3vw; border-radius: 2.5vh;
+    border: 0.4vh solid #9a86c4; background: white;
+    font-size: 2.2vh; font-weight: 800; color: #5a4a7a;
+    display: none;
+  }
+  #end-speaker.show { display: block; }
+  #end-dialog-text { font-size: 2.5vh; font-weight: 600; color: #333; line-height: 1.7; }
+  #end-dialog-arrow {
+    position: absolute; bottom: 1.5vh; right: 3vw;
+    font-size: 2.8vh; color: #888;
+    animation: arrow-blink 0.9s infinite; display: none;
+  }
+
+  /* 선택지 */
+  .end-choice-overlay {
+    position: absolute; inset: 0; z-index: 20;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 2vh;
+    background: rgba(0,0,0,0.15);
+  }
+  .end-choice-btn {
+    padding: 1.8vh 5vw; border-radius: 3vh;
+    border: 0.3vh solid #d8b8c8; background: rgba(255,255,255,0.96);
+    font-size: 2.3vh; font-weight: 700; color: #6a4a5a;
+    font-family: inherit; cursor: pointer;
+    transition: transform 0.1s, background 0.15s;
+  }
+  .end-choice-btn:hover  { background: #fff; }
+  .end-choice-btn:active { transform: scale(0.96); }
+
+  /* 입력란 */
+  .end-input-overlay {
+    position: absolute; inset: 0; z-index: 20;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(0,0,0,0.15);
+  }
+  .end-input-box {
+    background: white; border-radius: 3vh; padding: 4vh 4vw;
+    display: flex; flex-direction: column; gap: 2vh; align-items: center;
+    box-shadow: 0 1vh 3vh rgba(0,0,0,0.25);
+  }
+  .end-input-field {
+    font-size: 2.4vh; padding: 1.4vh 2vw; border-radius: 2vh;
+    border: 0.3vh solid #ccc; font-family: inherit; text-align: center;
+    width: 60vw; max-width: 460px;
+  }
+  .end-input-confirm {
+    padding: 1.4vh 5vw; border-radius: 2.5vh; border: none;
+    background: #FFD700; color: #7a4800;
+    font-size: 2.1vh; font-weight: 800; font-family: inherit; cursor: pointer;
+  }
+
+  /* 흰/검은 페이드 오버레이 */
+  #fade-overlay {
+    position: absolute; inset: 0; z-index: 50;
+    background: #fff; opacity: 0; pointer-events: none;
+    transition: opacity 1.2s;
+  }
+  #fade-overlay.black { background: #000; }
+  #fade-overlay.on { opacity: 1; }
+
+  /* ── 크레딧 ── */
+  #credits-screen {
+    position: fixed; inset: 0; z-index: 100;
+    background: #fff; display: none; overflow: hidden;
+  }
+  #credits-screen.show { display: block; }
+  #credits-roll {
+    position: absolute; left: 0; right: 0; top: 100%;
+    text-align: center; color: #4a4a4a;
+    font-size: 2.6vh; line-height: 2.4;
+  }
+  #credits-roll .credit-line { margin: 0; }
+  #credits-roll .credit-gap { height: 6vh; }
+  #credits-roll .credit-role { color: #8a8a8a; font-size: 2.1vh; font-weight: 600; }
+  #credits-roll .credit-name { color: #4a4a4a; font-size: 2.7vh; font-weight: 800; margin-bottom: 3vh; }
+  #credits-roll .credit-special { color: #b5638a; font-size: 2.4vh; font-weight: 800; letter-spacing: 1px; }
+
+  /* 로고 + 버튼 (크레딧 후) */
+  #logo-screen {
+    position: fixed; inset: 0; z-index: 110;
+    background: #fff; display: none;
+    flex-direction: column; align-items: center; justify-content: center;
+  }
+  #logo-screen.show { display: flex; }
+  #end-logo {
+    max-width: 60vw; max-height: 36vh;
+    opacity: 0; transform: translateY(8vh);
+    transition: opacity 1.2s, transform 1.2s;
+  }
+  #end-logo.shown { opacity: 1; transform: translateY(0); }
+  #end-buttons {
+    margin-top: 5vh; display: flex; flex-direction: column; gap: 2.2vh;
+    opacity: 0; transition: opacity 1s;
+  }
+  #end-buttons.shown { opacity: 1; }
+  .end-menu-btn {
+    padding: 1.8vh 8vw; border-radius: 2.6vh; border: none;
+    font-size: 2.2vh; font-weight: 700; font-family: inherit;
+    color: #7a7a7a; cursor: pointer;
+    transition: transform 0.1s, filter 0.15s;
+  }
+  .end-menu-btn:hover  { filter: brightness(0.97); }
+  .end-menu-btn:active { transform: scale(0.97); }
+  #btn-title { background: #fbe3e6; }   /* 연분홍 */
+  #btn-stats { background: #f5ead9; }   /* 베이지 */
+</style>
+</head>
+<body>
+
+<div id="ending-stage">
+  <div id="end-bg"></div>
+  <div id="heart-field"></div>
+
+  <img id="doctor-end" src="assets/npc/doctor.png" alt="박사">
+  <canvas id="mom-canvas" width="512" height="640"></canvas>
+
+  <div id="end-dialog-box">
+    <div id="end-speaker"></div>
+    <div id="end-dialog-text"></div>
+    <div id="end-dialog-arrow">▼</div>
+  </div>
+
+  <div id="fade-overlay"></div>
+</div>
+
+<!-- 크레딧 -->
+<div id="credits-screen">
+  <div id="credits-roll"></div>
+</div>
+
+<!-- 로고 + 버튼 -->
+<div id="logo-screen">
+  <img id="end-logo" src="assets/title-logo.png" alt="로고">
+  <div id="end-buttons">
+    <button id="btn-title" class="end-menu-btn">타이틀 화면으로</button>
+    <button id="btn-stats" class="end-menu-btn">통계 보기</button>
+  </div>
+</div>
+
+<audio id="end-bgm" src="assets/audio/intro.mp3" loop></audio>
+<audio id="credit-bgm" src="assets/audio/ending.mp3"></audio>
+
+<script src="js/parts.js"></script>
+<script>
+'use strict';
+
+/* ════════════ 보간 (이름/성별/기억) ════════════ */
+function interp(text) {
+  const child = localStorage.getItem('childType') === 'son' ? '아들' : '딸';
+  return text
+    .replace(/\{playerName\}/g, localStorage.getItem('playerName') || '나')
+    .replace(/\{momName\}/g, localStorage.getItem('momName') || '엄마')
+    .replace(/\{endMemory\}/g, localStorage.getItem('var_endMemory') || '그 시간')
+    .replace(/\{child\}/g, child);
+}
+
+/* ════════════ 엄마 얼굴 그리기 ════════════ */
+const charData = JSON.parse(localStorage.getItem('charData') || '{}');
+const momCanvas = document.getElementById('mom-canvas');
+async function drawMom(smile) {
+  const ctx = momCanvas.getContext('2d');
+  if (smile) {
+    await FaceParts.drawFaceWithOverrides(ctx, charData, { eyeType: 'eye_smile', mouthType: 'mouth_open' });
+  } else {
+    await FaceParts.drawFace(ctx, charData);
+  }
+}
+
+/* ════════════ 대사 시스템 (인트로 방식) ════════════ */
+const box    = document.getElementById('end-dialog-box');
+const speaker= document.getElementById('end-speaker');
+const textEl = document.getElementById('end-dialog-text');
+const arrow  = document.getElementById('end-dialog-arrow');
+const fade   = document.getElementById('fade-overlay');
+
+let _script = null, _idx = 0;
+let _typing = false, _full = '', _timer = null, _waiting = false;
+let _inChoice = false, _inInput = false;
+
+function runScript(script) { _script = script; _idx = 0; nextLine(); }
+
+function nextLine() {
+  if (_idx >= _script.length) return;
+  const line = _script[_idx++];
+
+  if (typeof line.fn === 'function') {     // 연출 함수 (페이드/등장 등)
+    const auto = line.fn();
+    // fn이 true를 반환하면 즉시 다음 줄, 아니면 setTimeout 등으로 다음 진행
+    if (auto === true) nextLine();
+    return;
+  }
+  if (line.choice) { showChoice(line); return; }
+  if (line.input)  { showInput(line.input); return; }
+
+  // 대사
+  box.classList.add('show');
+  if (line.speaker) { speaker.textContent = line.speaker; speaker.classList.add('show'); }
+  else speaker.classList.remove('show');
+  arrow.style.display = 'none';
+  typeText(interp(line.text), () => { _waiting = true; arrow.style.display = 'block'; });
+}
+
+function typeText(text, onDone) {
+  _full = text; _typing = true; textEl.textContent = ''; let i = 0;
+  _timer = setInterval(() => {
+    if (i < text.length) textEl.textContent += text[i++];
+    else { clearInterval(_timer); _typing = false; onDone(); }
+  }, 45);
+}
+function finishTyping() {
+  clearInterval(_timer); textEl.textContent = _full;
+  _typing = false; _waiting = true; arrow.style.display = 'block';
+}
+function advance() {
+  if (_inChoice || _inInput) return;
+  if (_typing) { finishTyping(); return; }
+  if (_waiting) { _waiting = false; arrow.style.display = 'none'; nextLine(); }
+}
+document.getElementById('ending-stage').addEventListener('click', advance);
+
+function showChoice(line) {
+  _inChoice = true;
+  const ov = document.createElement('div');
+  ov.className = 'end-choice-overlay';
+  line.choice.forEach(opt => {
+    const b = document.createElement('button');
+    b.className = 'end-choice-btn';
+    b.textContent = opt.text;
+    b.addEventListener('click', e => {
+      e.stopPropagation();
+      ov.remove(); _inChoice = false; nextLine();
+    });
+    ov.appendChild(b);
+  });
+  document.getElementById('ending-stage').appendChild(ov);
+}
+
+function showInput(cfg) {
+  _inInput = true;
+  const ov = document.createElement('div');
+  ov.className = 'end-input-overlay';
+  ov.innerHTML = `
+    <div class="end-input-box">
+      <input type="text" class="end-input-field" maxlength="30" placeholder="${cfg.prompt}">
+      <button class="end-input-confirm">완료!</button>
+    </div>`;
+  document.getElementById('ending-stage').appendChild(ov);
+  const input = ov.querySelector('.end-input-field');
+  input.focus();
+  const done = (e) => {
+    if (e) e.stopPropagation();
+    const v = input.value.trim();
+    if (!v) return;
+    localStorage.setItem('var_' + cfg.key, v);
+    ov.remove(); _inInput = false; nextLine();
+  };
+  ov.querySelector('.end-input-confirm').addEventListener('click', done);
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); done(e); }
+    e.stopPropagation();
+  });
+}
+
+/* ════════════ 연출 헬퍼 ════════════ */
+function hideDialog() { box.classList.remove('show'); speaker.classList.remove('show'); arrow.style.display = 'none'; }
+
+function fadeTo(color, cb) {           // 흰/검은 페이드 인
+  fade.classList.toggle('black', color === 'black');
+  fade.classList.add('on');
+  setTimeout(cb, 1300);
+}
+function fadeClear(cb) {                // 페이드 걷기
+  fade.classList.remove('on');
+  setTimeout(cb, 1300);
+}
+
+function spawnHearts() {
+  const field = document.getElementById('heart-field');
+  const colors = ['#ffc2d9', '#ff7eb0', '#e84a8a'];  // 연핑크 / 핑크 / 진핑크
+  for (let i = 0; i < 22; i++) {
+    const h = document.createElement('div');
+    h.className = 'heart';
+    h.textContent = '♥';
+    h.style.left = Math.random() * 100 + 'vw';
+    h.style.color = colors[i % 3];
+    h.style.fontSize = (2.5 + Math.random() * 3.5) + 'vh';
+    h.style.animationDuration = (5 + Math.random() * 5) + 's';
+    h.style.animationDelay = (-Math.random() * 8) + 's';
+    field.appendChild(h);
+  }
+}
+
+/* ════════════ 애정도 분기 대사 ════════════ */
+function loveLine() {
+  const lv = localStorage.getItem('var_loveLevel') || 'mid';
+  if (lv === 'low')
+    return "{playerName}이의 말이 가끔은 상처가 되고 힘들긴 했지만... 그래도 우리 {child}이 엄마를 너무 미워하지 않으면 좋겠어.";
+  if (lv === 'high')
+    return "일주일간 엄마를 언제나 생각해주고, 챙겨주고... 우리 {child}, 벌써 다 컸네! 엄마는 너무 기뻐.";
+  return "가끔 잘 맞지 않는 때도 있었지만, 그래도 우리 {child}이 곁에 있어서 얼마나 다행인지 몰라.";
+}
+
+/* ════════════ 엔딩 스크립트 ════════════ */
+const ENDING = [
+  // ── 1막: 잠자기 전 회상 (집 배경, 인트로 BGM) ──
+  { fn: () => { document.getElementById('end-bgm').volume = 0.4; document.getElementById('end-bgm').play().catch(()=>{}); return true; } },
+  { text: "내일이면 엄마와의 일주일이 끝난다." },
+  { text: "그렇게 생각하니, 자기 전에 여러 생각이 든다..." },
+  { text: "엄마와 함께 한 일주일 동안, 무엇이 제일 기억에 남느냐 한다면..." },
+  { input: { prompt: '제일 기억에 남는 것은?', key: 'endMemory' } },
+  { text: "그래, {endMemory} 이었지. 정말 즐거웠어." },
+
+  // ── 흰 페이드 → 엄마 등장 → 하트 배경 ──
+  { fn: () => { hideDialog(); fadeTo('white', () => nextLine()); } },
+  { fn: () => { drawMom(true); momCanvas.classList.add('shown'); document.getElementById('end-bg').style.background = '#fff'; return true; } },
+  { fn: () => { fadeClear(() => nextLine()); } },
+  { fn: () => { spawnHearts(); document.getElementById('heart-field').classList.add('on'); setTimeout(() => nextLine(), 1000); } },
+
+  { text: "생각해 보니, 진짜 \"엄마\"와 그런 일을 한 게 꽤 오래 전인 것 같다." },
+  { text: "즐거웠던 추억을 생각해 보며 점점 밤이 깊어간다..." },
+
+  // ── 검은 페이드 → 무지개 배경 (박사 장면) ──
+  { fn: () => { hideDialog(); fadeTo('black', () => nextLine()); } },
+  { fn: () => {
+      momCanvas.classList.remove('shown');
+      document.getElementById('heart-field').classList.remove('on');
+      const bg = document.getElementById('end-bg');
+      bg.style.background = ''; bg.classList.add('rainbow');
+      document.getElementById('doctor-end').classList.add('shown');
+      return true;
+    } },
+  { fn: () => { fade.classList.remove('black'); fadeClear(() => nextLine()); } },
+
+  { speaker: '엄박사', text: "{playerName}! 잘 잤니?" },
+  { speaker: '엄박사', text: "엄마와 함께 한 일주일 동안 \"엄마\"에 대한 많은 정보를 얻었다면 좋겠구나." },
+  { speaker: '엄박사', text: "하지만 그것보다... 이번 일주일이 너에게 있어서 멋진 경험이었다면 좋겠다." },
+  { speaker: '엄박사', text: "자, 열심히 노력해준 너에게 연구의 결과를 알려주고 싶은데... 아!" },
+  { speaker: '엄박사', text: "그건 나보다 그녀에게 듣는 편이 좋겠구나." },
+
+  // ── 박사 퇴장 → 엄마 등장 ──
+  { fn: () => {
+      document.getElementById('doctor-end').classList.remove('shown');
+      setTimeout(() => {
+        drawMom(false);
+        momCanvas.classList.add('shown');
+        setTimeout(() => nextLine(), 900);
+      }, 800);
+    } },
+
+  { speaker: '엄마', text: "우리 {child}, 안녕?" },
+  { speaker: '엄마', text: "일주일 간 어땠니? 엄마는 우리 {playerName}이랑 같이 있어서 정말 즐거웠어." },
+
+  // ── 애정도 분기 (high면 웃는 얼굴) ──
+  { fn: () => {
+      const lv = localStorage.getItem('var_loveLevel') || 'mid';
+      if (lv === 'high') drawMom(true);
+      return true;
+    } },
+  { speaker: '엄마', text: loveLine() },
+
+  // ── 원래 얼굴로 ──
+  { fn: () => { drawMom(false); return true; } },
+  { speaker: '엄마', text: "\"엄마\"에 대해선 조금 알아낸 것 같니?" },
+  { choice: [
+      { text: '많이 알아냈다!' },
+      { text: '조금은 알아낸 것 같다' },
+      { text: '아직 잘 모르겠다...' },
+  ] },
+  { speaker: '엄마', text: "으음... 그랬구나." },
+  { speaker: '엄마', text: "..." },
+  { speaker: '엄마', text: "우리 {playerName}... 엄마는 너랑 있을 수 있어서 너무 행복했어." },
+  { speaker: '엄마', text: "하지만, 네가 \"엄마\"에 대해 더 알아가기 위해선..." },
+  { speaker: '엄마', text: "네가 \"엄마\"에 대해 이해하기 위해선, 꼭 해야 할 게 있단다." },
+
+  // ── 웃는 얼굴 ──
+  { fn: () => { drawMom(true); return true; } },
+  { speaker: '엄마', text: "현실 세계의 진짜 \"엄마\"를 만나보는 거야." },
+  { speaker: '엄마', text: "어렵지 않단다! 진짜 엄마의 말을 듣고, 엄마를 이해하기만 하면 돼." },
+  { speaker: '엄마', text: "엄마... 나랑 같이 한 일을 \"엄마\"랑도 해보렴, 알겠지?" },
+  { speaker: '엄마', text: "우리 {child}은 벌써 이렇게 다 컸으니까, 분명 할 수 있을 거야." },
+  { speaker: '엄마', text: "알겠지?" },
+  { choice: [ { text: '알겠어!' } ] },
+  { speaker: '엄마', text: "좋아, 그럼..." },
+  { speaker: '엄마', text: "\"진짜\" 엄마를 연구하러 가자!" },
+
+  // ── 화이트아웃 → 크레딧 ──
+  { fn: () => { hideDialog(); fadeTo('white', () => startCredits()); } },
+];
+
+/* ════════════ 크레딧 → 로고 → 버튼 ════════════ */
+function startCredits() {
+  // BGM 전환: 인트로곡 끄고 ending.mp3
+  const endBgm = document.getElementById('end-bgm');
+  endBgm.pause();
+  const creditBgm = document.getElementById('credit-bgm');
+  creditBgm.volume = 0.5;
+  creditBgm.currentTime = 0;
+  creditBgm.play().catch(()=>{});
+
+  const roll = document.getElementById('credits-roll');
+  const child = localStorage.getItem('childType') === 'son' ? '아들' : '딸';
+  const mom = localStorage.getItem('momName') || '엄마';
+  const player = localStorage.getItem('playerName') || '나';
+
+  roll.innerHTML = `
+    <p class="credit-line credit-role">제작</p>
+    <p class="credit-line credit-name">김민서 · 하미루 · 황서윤</p>
+    <p class="credit-line credit-role">자료제공</p>
+    <p class="credit-line credit-name">황버들 · 남효정</p>
+    <p class="credit-line credit-role">음원</p>
+    <p class="credit-line credit-name">친구모아 아파트</p>
+    <p class="credit-line credit-role">배경 및 캐릭터 이미지 참고</p>
+    <p class="credit-line credit-name">이라스토야 일러스트</p>
+    <p class="credit-line credit-role">스크립트 작성</p>
+    <p class="credit-line credit-name">김민서 · 하미루</p>
+    <p class="credit-line credit-role">개발</p>
+    <p class="credit-line credit-name">황서윤</p>
+    <p class="credit-line credit-role">NPC · 아이템 이미지</p>
+    <p class="credit-line credit-name">여러 밈들</p>
+    <div class="credit-gap"></div>
+    <div class="credit-gap"></div>
+    <p class="credit-line credit-special">SPECIAL THANKS TO…</p>
+    <p class="credit-line credit-special">${mom}</p>
+    <p class="credit-line credit-special">AND ${player}</p>
+  `;
+
+  document.getElementById('credits-screen').classList.add('show');
+
+  // 크레딧 롤: 아래(top:100%)에서 위로. 시작 후 정확히 60초에 로고 화면으로.
+  // 롤 자체는 끝까지 흐르도록 충분히 길게(약 58초), 60초에 로고 등장.
+  requestAnimationFrame(() => {
+    const screenH = window.innerHeight;
+    const rollH = roll.offsetHeight;
+    const distance = screenH + rollH;   // 화면 아래 밖 → 위로 완전히 빠져나감
+    roll.style.transition = 'transform 58s linear';
+    roll.style.transform = `translateY(-${distance}px)`;
+  });
+
+  setTimeout(showLogo, 60000);   // 60초 = ending.mp3 타이밍
+}
+
+function showLogo() {
+  document.getElementById('credits-screen').classList.remove('show');
+  const logoScreen = document.getElementById('logo-screen');
+  logoScreen.classList.add('show');
+
+  // 로고 등장 (아래→중앙)
+  requestAnimationFrame(() => {
+    document.getElementById('end-logo').classList.add('shown');
+  });
+
+  // BGM 서서히 페이드아웃
+  const creditBgm = document.getElementById('credit-bgm');
+  const fadeOut = setInterval(() => {
+    if (creditBgm.volume > 0.03) creditBgm.volume -= 0.03;
+    else { creditBgm.volume = 0; creditBgm.pause(); clearInterval(fadeOut); }
+  }, 150);
+
+  // 로고 뜬 뒤 버튼 페이드인
+  setTimeout(() => {
+    document.getElementById('end-buttons').classList.add('shown');
+  }, 1600);
+}
+
+/* 버튼 */
+document.getElementById('btn-title').addEventListener('click', () => {
+  location.href = 'index.html';
+});
+document.getElementById('btn-stats').addEventListener('click', () => {
+  // 통계에서 뒤로가기 시 이 엔딩 화면으로 돌아오게 표시
+  sessionStorage.setItem('statsFrom', 'ending');
+  location.href = 'stats.html';
+});
+
+/* ════════════ 시작 ════════════ */
+window.addEventListener('load', async () => {
+  await FaceParts.preloadFace(charData);
+  // 통계 보고 돌아온 경우: 엔딩 전체를 다시 보지 않고 로고+버튼 화면으로 바로
+  if (sessionStorage.getItem('statsFrom') === 'ending') {
+    sessionStorage.removeItem('statsFrom');
+    showLogoDirect();
+    return;
+  }
+  runScript(ENDING);
+});
+
+/* 통계에서 복귀 시: 크레딧 없이 로고+버튼만 표시 (BGM 없이) */
+function showLogoDirect() {
+  const logoScreen = document.getElementById('logo-screen');
+  logoScreen.classList.add('show');
+  requestAnimationFrame(() => {
+    document.getElementById('end-logo').classList.add('shown');
+    document.getElementById('end-buttons').classList.add('shown');
+  });
+}
+</script>
+
+</body>
+</html>
