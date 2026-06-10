@@ -299,6 +299,19 @@ scheduleBlink();
 })();
 
 /* ══════════════════════════════════════════
+   [테스트용] 엔딩 버튼 — 즉시 엔딩 시작 (배포 전 삭제)
+══════════════════════════════════════════ */
+(function () {
+  const btn = document.getElementById('ending-btn');
+  if (!btn) return;
+  btn.addEventListener('click', () => {
+    if (window._endingStarted) return;
+    window._endingStarted = true;
+    window.startEnding();
+  });
+})();
+
+/* ══════════════════════════════════════════
    웃음 버튼
 ══════════════════════════════════════════ */
 document.getElementById('smile-btn').addEventListener('click', async ()=>{
@@ -795,6 +808,28 @@ window.exitEvent = () => {
 	setTimeout(maybeRandomEvent, 600);
 };
 
+/* ── 엔딩 시작 ──────────────────────────────────────
+   애정 스탯을 loveLevel(low/mid/high)로 변환해 저장하고
+   별도 엔딩 페이지(ending.html)로 이동. 연출/BGM은 그쪽에서 처리.
+──────────────────────────────────────────────────── */
+function startEnding() {
+  let love = 0;
+  try {
+    const stats = JSON.parse(localStorage.getItem('stats') || '{}');
+    love = stats.애정 || 0;
+  } catch (e) {}
+  let level = 'mid';
+  if (love < 5)       level = 'low';   // 5 미만
+  else if (love > 10) level = 'high';  // 10 초과
+  localStorage.setItem('var_loveLevel', level);
+
+  // 메인 BGM 정지 후 엔딩 페이지로
+  const bgm = document.getElementById('bgm');
+  if (bgm) bgm.pause();
+  location.href = 'ending.html';
+}
+window.startEnding = startEnding;
+
 /* ── 일자/시간 HUD ── */
 function ensureDayTimeEl() {
   let el = document.getElementById('day-time');
@@ -818,6 +853,12 @@ window.refreshDayTime = function() {
   try { dt = JSON.parse(localStorage.getItem('dayTime') || '{"day":1,"time":"morning"}'); }
   catch(e) { dt = { day:1, time:'morning' }; }
   el.textContent = `${dt.day}일차 - ${dt.time === 'morning' ? '오전' : '오후'}`;
+
+  // 8일차로 넘어가면 자동 엔딩 (7일 오후 종료 시점)
+  if (dt.day >= 8 && !window._endingStarted) {
+    window._endingStarted = true;
+    setTimeout(() => window.startEnding(), 800);
+  }
 };
 window.refreshDayTime();
 
