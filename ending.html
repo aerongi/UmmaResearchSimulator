@@ -44,15 +44,16 @@
     100% { transform: translateY(-115vh) scale(1.1) rotate(8deg); opacity: 0; }
   }
 
-  /* 엄마 얼굴 캔버스 (중앙) */
-  #mom-canvas {
+  /* 엄마 3D 캐릭터 (중앙) */
+  #mom-3d {
     position: relative; z-index: 4;
-    height: 60vh; width: auto;
-    margin-bottom: 14vh;
+    width: 56vh; height: 56vh;   /* 정사각형 (비율 유지) */
+    max-width: 92vw;
+    margin-bottom: 8vh;
     opacity: 0; transition: opacity 1.2s;
     pointer-events: none;
   }
-  #mom-canvas.shown { opacity: 1; }
+  #mom-3d.shown { opacity: 1; }
 
   /* 박사 */
   #doctor-end {
@@ -193,7 +194,7 @@
   <div id="heart-field"></div>
 
   <img id="doctor-end" src="assets/npc/doctor.png" alt="박사">
-  <canvas id="mom-canvas" width="512" height="640"></canvas>
+  <canvas id="mom-3d"></canvas>
 
   <div id="end-dialog-box">
     <div id="end-speaker"></div>
@@ -221,6 +222,7 @@
 <audio id="end-bgm" src="assets/audio/intro.mp3" loop></audio>
 <audio id="credit-bgm" src="assets/audio/ending.mp3"></audio>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="js/parts.js"></script>
 <script>
 'use strict';
@@ -235,17 +237,88 @@ function interp(text) {
     .replace(/\{child\}/g, child);
 }
 
-/* ════════════ 엄마 얼굴 그리기 ════════════ */
+/* ════════════ 엄마 3D 캐릭터 ════════════ */
 const charData = JSON.parse(localStorage.getItem('charData') || '{}');
-const momCanvas = document.getElementById('mom-canvas');
+const clothingHex = (function () {
+  const c = (FaceParts.CLOTHING_COLORS || []).find(x => x.id === charData.clothingColor);
+  return c ? c.hex : '#F5C842';
+})();
+
+let mom3D = null;
+function setupMom3D() {
+  const canvas = document.getElementById('mom-3d');
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
+  camera.position.set(0, 1.4, 4);
+  camera.lookAt(0, 1.0, 0);
+  scene.add(new THREE.AmbientLight(0xffffff, 1.0));
+  const sun = new THREE.DirectionalLight(0xffffff, 0.4);
+  sun.position.set(2, 5, 3); scene.add(sun);
+
+  const charGroup = new THREE.Group();
+  scene.add(charGroup);
+
+  const faceCanvas = document.createElement('canvas');
+  faceCanvas.width = 512; faceCanvas.height = 512;
+  const faceTex = new THREE.CanvasTexture(faceCanvas); faceTex.premultiplyAlpha = false;
+  const backHairCanvas = document.createElement('canvas');
+  backHairCanvas.width = 512; backHairCanvas.height = 512;
+  const backHairTex = new THREE.CanvasTexture(backHairCanvas); backHairTex.premultiplyAlpha = false;
+
+  const headMat = new THREE.MeshBasicMaterial({ map: faceTex, transparent: true, alphaTest: 0.01, side: THREE.FrontSide, depthWrite: true });
+  const headPlane = new THREE.Mesh(new THREE.PlaneGeometry(0.84, 0.84), headMat);
+  headPlane.position.set(0, 1.65, 0.04); charGroup.add(headPlane);
+
+  const backHairMat = new THREE.MeshBasicMaterial({ map: backHairTex, transparent: true, alphaTest: 0.01, side: THREE.FrontSide, depthWrite: false });
+  const backHairPlane = new THREE.Mesh(new THREE.PlaneGeometry(0.90, 0.90), backHairMat);
+  backHairPlane.position.set(0, 1.65, -0.04); backHairPlane.rotation.y = Math.PI; charGroup.add(backHairPlane);
+
+  const clothingMat = new THREE.MeshStandardMaterial({ color: clothingHex, roughness: 0.7 });
+  const skinMat = new THREE.MeshStandardMaterial({ color: 0xFDDBB4, roughness: 0.65 });
+  const addPart = (geo, mat, x, y, z) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); charGroup.add(m); return m; };
+  addPart(new THREE.CylinderGeometry(0.16, 0.19, 0.62, 16), clothingMat, 0, 0.94, 0);
+  addPart(new THREE.SphereGeometry(0.19, 16, 8), clothingMat, 0, 0.63, 0);
+  addPart(new THREE.SphereGeometry(0.11, 14, 10), skinMat, -0.42, 0.65, 0);
+  addPart(new THREE.SphereGeometry(0.11, 14, 10), skinMat,  0.42, 0.65, 0);
+
+  function onResize() {
+    const w = canvas.clientWidth, h = canvas.clientHeight;
+    if (!w || !h) return;
+    renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix();
+  }
+  onResize(); window.addEventListener('resize', onResize);
+
+  function render() { renderer.render(scene, camera); }
+  // 살짝 둥실 + 지속 렌더 루프
+  let t0 = performance.now();
+  (function loop() {
+    requestAnimationFrame(loop);
+    const t = (performance.now() - t0) / 1000;
+    headPlane.position.y = 1.65 + Math.sin(t * 1.4) * 0.017;
+    backHairPlane.position.y = 1.65 + Math.sin(t * 1.4) * 0.017;
+    render();
+  })();
+
+  mom3D = { faceCanvas, faceTex, backHairCanvas, backHairTex, render };
+
+  // 뒷머리 텍스처 그리기
+  FaceParts.drawBackHairTexture(backHairCanvas.getContext('2d'), charData).then(() => { backHairTex.needsUpdate = true; });
+}
+
+// 엄마 표정 그리기 (smile=웃는 얼굴)
 async function drawMom(smile) {
-  const ctx = momCanvas.getContext('2d');
+  if (!mom3D) setupMom3D();
+  const ctx = mom3D.faceCanvas.getContext('2d');
   if (smile) {
     await FaceParts.drawFaceWithOverrides(ctx, charData, { eyeType: 'eye_smile', mouthType: 'mouth_open' });
   } else {
     await FaceParts.drawFace(ctx, charData);
   }
+  mom3D.faceTex.needsUpdate = true;
 }
+const momCanvas = document.getElementById('mom-3d');   // shown 토글용
 
 /* ════════════ 대사 시스템 (인트로 방식) ════════════ */
 const box    = document.getElementById('end-dialog-box');
