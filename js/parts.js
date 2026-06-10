@@ -155,7 +155,7 @@ const FaceParts = (() => {
     const br  = bw / 2;
     const bx  = cx - bw / 2;
     const by  = faceY + faceSize * 1.02;   // 얼굴 정사각형 아래(턱과 간격 두고) 시작
-    let bh  = (H - by) * 0.62;             // 납작하게 (바닥까지 안 채움)
+    let bh  = (H - by) * 0.8;              // 몸통 길이 (바닥까지 안 채움)
     if (bh < bw) bh = bw;                  // 너무 납작하면 최소 폭만큼 (roundRect 안전)
 
     ctx.fillStyle = clothHex;
