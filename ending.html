@@ -291,10 +291,13 @@ function setupMom3D() {
   onResize(); window.addEventListener('resize', onResize);
 
   function render() { renderer.render(scene, camera); }
-  // 살짝 둥실 + 지속 렌더 루프
+  // 살짝 둥실 + 지속 렌더 루프 (캔버스 크기 바뀌면 자동 보정 → 정중앙 유지)
   let t0 = performance.now();
+  let lastW = 0, lastH = 0;
   (function loop() {
     requestAnimationFrame(loop);
+    const w = canvas.clientWidth, h = canvas.clientHeight;
+    if (w && h && (w !== lastW || h !== lastH)) { lastW = w; lastH = h; onResize(); }
     const t = (performance.now() - t0) / 1000;
     headPlane.position.y = 1.65 + Math.sin(t * 1.4) * 0.017;
     backHairPlane.position.y = 1.65 + Math.sin(t * 1.4) * 0.017;
@@ -307,16 +310,35 @@ function setupMom3D() {
   FaceParts.drawBackHairTexture(backHairCanvas.getContext('2d'), charData).then(() => { backHairTex.needsUpdate = true; });
 }
 
-// 엄마 표정 그리기 (smile=웃는 얼굴)
-async function drawMom(smile) {
-  if (!mom3D) setupMom3D();
-  const ctx = mom3D.faceCanvas.getContext('2d');
-  if (smile) {
-    await FaceParts.drawFaceWithOverrides(ctx, charData, { eyeType: 'eye_smile', mouthType: 'mouth_open' });
-  } else {
-    await FaceParts.drawFace(ctx, charData);
-  }
+// 엄마 표정/입 (엔진 방식 그대로)
+let momExpression = 'default';        // 'default' | 'smile'
+let mouthAnimTimer = null;
+
+async function redrawMomFace(mouthOverride) {
+  if (!mom3D) return;
+  const eye = momExpression === 'smile' ? 'eye_smile' : (charData.eyeType || 'eye1');
+  await FaceParts.drawFaceWithOverrides(mom3D.faceCanvas.getContext('2d'), charData, {
+    mouthType: mouthOverride || (charData.mouthType || 'mouth1'),
+    eyeType: eye,
+  });
   mom3D.faceTex.needsUpdate = true;
+}
+function startMomMouth() {
+  stopMomMouth(); let open = false;
+  mouthAnimTimer = setInterval(() => {
+    open = !open;
+    redrawMomFace(open ? 'mouth_open' : (charData.mouthType || 'mouth1'));
+  }, 150);
+}
+function stopMomMouth() {
+  if (mouthAnimTimer) clearInterval(mouthAnimTimer);
+  mouthAnimTimer = null;
+  redrawMomFace(charData.mouthType || 'mouth1');   // 입 다묾
+}
+// 표정만 바꾸고 다시 그림 (입은 기본)
+async function setMomExpression(exp) {
+  momExpression = exp;
+  await redrawMomFace(charData.mouthType || 'mouth1');
 }
 const momCanvas = document.getElementById('mom-3d');   // shown 토글용
 
@@ -351,7 +373,11 @@ function nextLine() {
   if (line.speaker) { speaker.textContent = line.speaker; speaker.classList.add('show'); }
   else speaker.classList.remove('show');
   arrow.style.display = 'none';
-  typeText(interp(line.text), () => { _waiting = true; arrow.style.display = 'block'; });
+  if (line.speaker === '엄마') startMomMouth();   // 엄마 말할 때만 입 뻐끔
+  typeText(interp(line.text), () => {
+    stopMomMouth();
+    _waiting = true; arrow.style.display = 'block';
+  });
 }
 
 function typeText(text, onDone) {
@@ -364,6 +390,7 @@ function typeText(text, onDone) {
 function finishTyping() {
   clearInterval(_timer); textEl.textContent = _full;
   _typing = false; _waiting = true; arrow.style.display = 'block';
+  stopMomMouth();
 }
 function advance() {
   if (_inChoice || _inInput) return;
@@ -466,7 +493,7 @@ const ENDING = [
 
   // ── 흰 페이드 → 엄마 등장 → 하트 배경 ──
   { fn: () => { hideDialog(); fadeTo('white', () => nextLine()); } },
-  { fn: () => { drawMom(true); momCanvas.classList.add('shown'); document.getElementById('end-bg').style.background = '#fff'; return true; } },
+  { fn: () => { setupMom3D(); setMomExpression('smile'); momCanvas.classList.add('shown'); document.getElementById('end-bg').style.background = '#fff'; return true; } },
   { fn: () => { fadeClear(() => nextLine()); } },
   { fn: () => { spawnHearts(); document.getElementById('heart-field').classList.add('on'); setTimeout(() => nextLine(), 1000); } },
 
@@ -495,7 +522,7 @@ const ENDING = [
   { fn: () => {
       document.getElementById('doctor-end').classList.remove('shown');
       setTimeout(() => {
-        drawMom(false);
+        setMomExpression('default');
         momCanvas.classList.add('shown');
         setTimeout(() => nextLine(), 900);
       }, 800);
@@ -507,13 +534,13 @@ const ENDING = [
   // ── 애정도 분기 (high면 웃는 얼굴) ──
   { fn: () => {
       const lv = localStorage.getItem('var_loveLevel') || 'mid';
-      if (lv === 'high') drawMom(true);
+      if (lv === 'high') setMomExpression('smile'); else setMomExpression('default');
       return true;
     } },
   { speaker: '엄마', text: loveLine() },
 
   // ── 원래 얼굴로 ──
-  { fn: () => { drawMom(false); return true; } },
+  { fn: () => { setMomExpression('default'); return true; } },
   { speaker: '엄마', text: "\"엄마\"에 대해선 조금 알아낸 것 같니?" },
   { choice: [
       { text: '많이 알아냈다!' },
@@ -527,7 +554,7 @@ const ENDING = [
   { speaker: '엄마', text: "네가 \"엄마\"에 대해 이해하기 위해선, 꼭 해야 할 게 있단다." },
 
   // ── 웃는 얼굴 ──
-  { fn: () => { drawMom(true); return true; } },
+  { fn: () => { setMomExpression('smile'); return true; } },
   { speaker: '엄마', text: "현실 세계의 진짜 \"엄마\"를 만나보는 거야." },
   { speaker: '엄마', text: "어렵지 않단다! 진짜 엄마의 말을 듣고, 엄마를 이해하기만 하면 돼." },
   { speaker: '엄마', text: "엄마... 나랑 같이 한 일을 \"엄마\"랑도 해보렴, 알겠지?" },
