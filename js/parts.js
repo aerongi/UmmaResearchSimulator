@@ -148,14 +148,15 @@ const FaceParts = (() => {
     await drawFace(tmp.getContext('2d'), overrides ? { ...state, ...overrides } : state);
     ctx.drawImage(tmp, faceX, faceY, faceSize, faceSize);
 
-    // 몸통: 얼굴 아래에서 시작
+    // 몸통: 얼굴 아래에서 시작 (머리랑 안 닿게 충분히 내리고, 납작하게)
     const clothHex = (CLOTHING_COLORS.find(c=>c.id===state.clothingColor)||CLOTHING_COLORS[0]).hex;
     const cx  = W / 2;
-    const bw  = W * 0.24;                  // 막대 폭
+    const bw  = W * 0.30;                  // 막대 폭
     const br  = bw / 2;
     const bx  = cx - bw / 2;
-    const by  = faceY + faceSize * 0.86;   // 얼굴 하단(턱)쯤에서 몸통 시작
-    const bh  = H - by;                    // 캔버스 바닥까지
+    const by  = faceY + faceSize * 1.02;   // 얼굴 정사각형 아래(턱과 간격 두고) 시작
+    let bh  = (H - by) * 0.62;             // 납작하게 (바닥까지 안 채움)
+    if (bh < bw) bh = bw;                  // 너무 납작하면 최소 폭만큼 (roundRect 안전)
 
     ctx.fillStyle = clothHex;
     ctx.beginPath();
