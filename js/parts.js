@@ -20,15 +20,25 @@ const FaceParts = (() => {
     { id:'cl_black',    hex:'#2C2C2C', label:'블랙'    },
   ];
 
-  const FACE_TYPES       = [1,2,3,4,5].map(n=>({ id:`face${n}`,    label:`얼굴형${n}` }));
-  const EYE_TYPES        = [1,2,3,4,5].map(n=>({ id:`eye${n}`,     label:`눈${n}`     }));
+  const FACE_TYPES       = [1,2,3].map(n=>({ id:`face${n}`,    label:`얼굴형${n}` }));
+  const EYE_TYPES        = [1,2,3,4,5,6,7,8].map(n=>({ id:`eye${n}`,     label:`눈${n}`     }));
   const EYEBROW_TYPES    = [1,2,3,4].map(n  =>({ id:`eyebrow${n}`, label:`눈썹${n}`   }));
   const NOSE_TYPES       = [1,2,3,4].map(n  =>({ id:`nose${n}`,    label:`코${n}`     }));
-  const MOUTH_TYPES      = [1,2,3,4,5].map(n=>({ id:`mouth${n}`,   label:`입${n}`     }));
+  const MOUTH_TYPES      = [1,2,3,4].map(n=>({ id:`mouth${n}`,   label:`입${n}`     }));
   const FRONT_HAIR_TYPES = [1,2,3,4,5].map(n=>({ id:`hair${n}`,    label:`앞머리${n}` }));
-  const BACK_HAIR_TYPES  = [1,2,3,4,5].map(n=>({ id:`bhair${n}`,   label:`뒷머리${n}` }));
+  const BACK_HAIR_TYPES  = [1,2,3].map(n=>({ id:`bhair${n}`,   label:`뒷머리${n}` }));
 
-  /* ── PNG 로더 ──────────────────────────────────────── */
+// 액세서리: 각 카테고리는 '없음'(빈 값) + 종류들. 복수 착용(카테고리별 1개씩)
+  const WRINKLE_TYPES = [
+    { id:'', label:'없음' },
+    ...[1,2].map(n=>({ id:`wrinkle${n}`, label:`주름${n}` })),
+  ];
+  const GLASSES_TYPES = [
+    { id:'', label:'없음' },
+    ...[1,2,3].map(n=>({ id:`glasses${n}`, label:`안경${n}` })),
+  ];
+
+  /* ── PNG 로더 (로딩된 이미지는 _cache에 보관) ── */
   const _cache = {};
   function loadImage(src) {
     return new Promise(resolve => {
@@ -52,6 +62,27 @@ const FaceParts = (() => {
     c.fillStyle = hex; c.globalAlpha = 0.72; c.fillRect(0, 0, W, H);
     c.globalCompositeOperation = 'source-over'; c.globalAlpha = 1;
     return t;
+  }
+
+  /* ── 얼굴 PNG 전부 미리 로딩 (게임 진입 전 호출) ──
+     한 번 받아두면 _cache 덕분에 이후 drawFace는 즉시 그려짐.
+     시작 버튼 게이트에서 await 해서 "얼굴 없는 캐릭터" 방지.
+  ── */
+  async function preloadFace(state) {
+    state = state || {};
+    await Promise.all([
+      _load('hair',    state.backHairType),
+      _load('face',    state.faceType),
+      _load('eyes',    state.eyeType),
+      _load('eyebrow', state.eyebrowType),
+      _load('nose',    state.noseType),
+      _load('mouth',   state.mouthType),
+      _load('hair',    state.frontHairType),
+      _load('accessory', state.wrinkleType),
+      _load('accessory', state.glassesType),
+      _load('mouth',   'mouth_open'),   // 입 움직임용
+      _load('eyes',    'eye_smile'),    // 웃는 눈용
+    ]);
   }
 
   /* ── 얼굴 드로우 ─────────────────────────────────────
@@ -82,6 +113,13 @@ const FaceParts = (() => {
 
     const fhImg   = await _load('hair',    state.frontHairType);
     if (fhImg)   ctx.drawImage(_tint(fhImg, hair, W, H), 0, 0, W, H);
+
+	    // 액세서리 (PNG 그대로, 색 변경 없음) — 주름 먼저, 안경 맨 위
+    const wrkImg  = await _load('accessory', state.wrinkleType);
+    if (wrkImg)  ctx.drawImage(wrkImg, 0, 0, W, H);
+
+    const glsImg  = await _load('accessory', state.glassesType);
+    if (glsImg)  ctx.drawImage(glsImg, 0, 0, W, H);
   }
 
   async function drawFaceWithOverrides(ctx, state, overrides) {
@@ -123,7 +161,7 @@ const FaceParts = (() => {
     ctx.fill();
   }
 
-  /* ── 그리드 아이콘 (PNG 없으면 빈 배경) ────────────── */
+  /* ── 그리드 아이콘 (PNG 없으면 빈 배경) ── */
   async function drawIcon(canvas, partType, partId, state) {
     const ctx = canvas.getContext('2d');
     const W = canvas.width, H = canvas.height;
@@ -134,7 +172,8 @@ const FaceParts = (() => {
     const hair = (HAIR_COLORS.find(c=>c.id===state.hairColor)||HAIR_COLORS[0]).hex;
 
     const folderMap = { fronthair:'hair', backhair:'hair', face:'face',
-                        eyes:'eyes', eyebrow:'eyebrow', nose:'nose', mouth:'mouth' };
+                        eyes:'eyes', eyebrow:'eyebrow', nose:'nose', mouth:'mouth',
+                        wrinkle:'accessory', glasses:'accessory' };
     const folder = folderMap[partType];
     if (!folder) return;
 
@@ -151,7 +190,8 @@ const FaceParts = (() => {
   return {
     HAIR_COLORS, CLOTHING_COLORS,
     FACE_TYPES, EYE_TYPES, EYEBROW_TYPES, NOSE_TYPES, MOUTH_TYPES,
-    FRONT_HAIR_TYPES, BACK_HAIR_TYPES,
-    drawFace, drawFaceWithOverrides, drawBackHairTexture, drawPreview, drawIcon, loadImage,
+    FRONT_HAIR_TYPES, BACK_HAIR_TYPES, WRINKLE_TYPES, GLASSES_TYPES,
+    drawFace, drawFaceWithOverrides, drawBackHairTexture, drawPreview, drawIcon,
+    loadImage, preloadFace,
   };
 })();
