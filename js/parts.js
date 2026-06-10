@@ -139,21 +139,23 @@ const FaceParts = (() => {
     const W = ctx.canvas.width, H = ctx.canvas.height;
     ctx.clearRect(0, 0, W, H);
 
-    // 얼굴: 정사각형(W×W)에 그려 비율 유지 (가로 눌림 방지).
-    // 캔버스 폭(360)을 한 변으로 → 얼굴이 캔버스 상단을 정사각형으로 차지.
+    // 얼굴: 정사각형으로 그려 비율 유지. 캔버스 폭의 70% 크기로 상단 중앙에 배치.
+    const faceSize = W * 0.70;
+    const faceX = (W - faceSize) / 2;     // 가로 중앙
+    const faceY = H * 0.06;               // 위쪽 약간 여백
     const tmp = document.createElement('canvas');
-    tmp.width = W; tmp.height = W;
+    tmp.width = faceSize; tmp.height = faceSize;
     await drawFace(tmp.getContext('2d'), overrides ? { ...state, ...overrides } : state);
-    ctx.drawImage(tmp, 0, 0);
+    ctx.drawImage(tmp, faceX, faceY, faceSize, faceSize);
 
-    // 몸통: 얼굴 정사각형 아래에서 시작 (얼굴 PNG 하단 여백과 살짝 겹침)
+    // 몸통: 얼굴 아래에서 시작
     const clothHex = (CLOTHING_COLORS.find(c=>c.id===state.clothingColor)||CLOTHING_COLORS[0]).hex;
     const cx  = W / 2;
-    const bw  = W * 0.28;       // 막대 폭
-    const br  = bw / 2;         // 끝 반원
+    const bw  = W * 0.24;                  // 막대 폭
+    const br  = bw / 2;
     const bx  = cx - bw / 2;
-    const by  = W * 0.88;       // 얼굴 정사각형 하단쯤(턱 아래)에서 몸통 시작
-    const bh  = H - by;         // 캔버스 바닥까지
+    const by  = faceY + faceSize * 0.86;   // 얼굴 하단(턱)쯤에서 몸통 시작
+    const bh  = H - by;                    // 캔버스 바닥까지
 
     ctx.fillStyle = clothHex;
     ctx.beginPath();
