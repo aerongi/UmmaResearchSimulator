@@ -101,21 +101,21 @@ const FaceParts = (() => {
     const W = ctx.canvas.width, H = ctx.canvas.height;
     ctx.clearRect(0, 0, W, H);
 
-    // 얼굴: 정사각형 비율 유지 (캔버스 폭 기준). 가로 눌림 방지.
-    const faceSize = W;                       // 얼굴 영역 = 정사각형 (W×W)
+    // 얼굴 영역: 상단 60%
+    const faceH = Math.floor(H * 0.60);
     const tmp = document.createElement('canvas');
-    tmp.width = faceSize; tmp.height = faceSize;
+    tmp.width = W; tmp.height = faceH;
     await drawFace(tmp.getContext('2d'), overrides ? { ...state, ...overrides } : state);
-    ctx.drawImage(tmp, 0, 0, faceSize, faceSize);
+    ctx.drawImage(tmp, 0, 0);
 
-    // 몸통: 기다란 둥근 막대 하나 (팔 없음). 얼굴 정사각형 아래에서 시작.
+    // 몸통: 기다란 둥근 막대 하나 (팔 없음)
     const clothHex = (CLOTHING_COLORS.find(c=>c.id===state.clothingColor)||CLOTHING_COLORS[0]).hex;
     const cx  = W / 2;
     const bw  = W * 0.28;       // 막대 폭
+    const bh  = H * 0.36;       // 막대 높이
     const br  = bw / 2;         // 끝 반원
     const bx  = cx - bw / 2;
-    const by  = faceSize * 0.82;        // 얼굴 하단쯤에서 몸통 시작 (목 겹침)
-    const bh  = H - by;                 // 캔버스 바닥까지
+    const by  = faceH + H * 0.01;
 
     ctx.fillStyle = clothHex;
     ctx.beginPath();
