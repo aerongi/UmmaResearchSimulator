@@ -649,13 +649,18 @@ function showLogoStart() {
   // 흰 배경 깔기
   document.getElementById('logo-set').classList.add('shown');
   const logo = document.getElementById('end-logo');
-  // 이중 rAF로 시작 위치(아래) 확정 후 .up 적용 → 천천히 올라옴
-  requestAnimationFrame(() => {
-    void logo.offsetHeight;
-    requestAnimationFrame(() => {
-      logo.classList.add('up');
-    });
-  });
+
+  // 시작 위치를 transition 없이 확실히 박은 뒤(강제 reflow), 다음에 transition+이동 적용.
+  logo.classList.remove('up');
+  logo.style.transition = 'none';
+  logo.style.transform = 'translateY(100vh)';
+  void logo.offsetHeight;                       // 강제 reflow → 시작 상태 확정
+
+  setTimeout(() => {
+    logo.style.transition = 'transform 8s linear';
+    logo.style.transform = 'translateY(0)';     // 천천히 위로 올라와 중앙
+  }, 50);
+
   // 로고가 중앙에 멈춘 뒤(8초 슬라이드 + 여유) 버튼 등장
   setTimeout(() => {
     document.getElementById('end-buttons').classList.add('shown');
