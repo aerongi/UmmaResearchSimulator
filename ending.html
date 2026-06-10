@@ -624,18 +624,19 @@ function startCredits() {
 
   document.getElementById('credits-screen').classList.add('show');
 
-  // 크레딧 텍스트 스크롤 (45초, 빠르게 → 로고 출발 전에 다 사라짐).
-  // display:block 직후 transition을 바로 걸면 씹히므로 이중 rAF로 시작 확정 후 적용.
+  // 크레딧 스크롤: 화면 완전 아래(안 보임)에서 시작 → 위로 완전히 사라짐.
+  // top:100% 대신 transform으로만 위치 제어 (첫 줄이 깜빡 보이는 '띡' 방지).
+  const screenH = window.innerHeight;
+  roll.style.top = '0';                          // top 기준 제거
   roll.style.transition = 'none';
-  roll.style.transform = 'translateY(0)';
+  roll.style.transform = `translateY(${screenH}px)`;   // 화면 바로 아래 (안 보임)
   requestAnimationFrame(() => {
-    void roll.offsetHeight;
+    void roll.offsetHeight;                      // 시작 상태 확정
     requestAnimationFrame(() => {
-      const screenH = window.innerHeight;
       const rollH = roll.offsetHeight;
-      const distance = screenH + rollH;   // 롤 전체가 화면 위로 완전히 사라짐
+      const distance = screenH + rollH;          // 아래(screenH)에서 위로 rollH만큼 = 완전히 사라짐
       roll.style.transition = 'transform 45s linear';
-      roll.style.transform = `translateY(-${distance}px)`;
+      roll.style.transform = `translateY(-${rollH}px)`;
     });
   });
 
@@ -684,8 +685,10 @@ window.addEventListener('load', async () => {
 
 /* 통계에서 복귀 시: 크레딧 없이 로고(올라온 상태)+버튼 바로 표시 (BGM 없이) */
 function showLogoDirect() {
+  const logo = document.getElementById('end-logo');
+  logo.style.transition = 'none';   // 슬라이드 없이 즉시 제자리
   document.getElementById('logo-set').classList.add('shown');
-  document.getElementById('end-logo').classList.add('up');
+  logo.classList.add('up');
   document.getElementById('end-buttons').classList.add('shown');
 }
 </script>
