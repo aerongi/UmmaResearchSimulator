@@ -24,7 +24,7 @@ const FaceParts = (() => {
   const EYE_TYPES        = [1,2,3,4,5,6,7,8].map(n=>({ id:`eye${n}`,     label:`눈${n}`     }));
   const EYEBROW_TYPES    = [1,2,3,4].map(n  =>({ id:`eyebrow${n}`, label:`눈썹${n}`   }));
   const NOSE_TYPES       = [1,2,3,4].map(n  =>({ id:`nose${n}`,    label:`코${n}`     }));
-  const MOUTH_TYPES      = [1,2,3,4].map(n=>({ id:`mouth${n}`,   label:`입${n}`     }));
+  const MOUTH_TYPES      = [1,2,3].map(n=>({ id:`mouth${n}`,   label:`입${n}`     }));
   const FRONT_HAIR_TYPES = [1,2,3,4,5].map(n=>({ id:`hair${n}`,    label:`앞머리${n}` }));
   const BACK_HAIR_TYPES  = [1,2,3].map(n=>({ id:`bhair${n}`,   label:`뒷머리${n}` }));
 
@@ -139,21 +139,21 @@ const FaceParts = (() => {
     const W = ctx.canvas.width, H = ctx.canvas.height;
     ctx.clearRect(0, 0, W, H);
 
-    // 얼굴 영역: 상단 60%
-    const faceH = Math.floor(H * 0.60);
+    // 얼굴: 정사각형(W×W)에 그려 비율 유지 (가로 눌림 방지).
+    // 캔버스 폭(360)을 한 변으로 → 얼굴이 캔버스 상단을 정사각형으로 차지.
     const tmp = document.createElement('canvas');
-    tmp.width = W; tmp.height = faceH;
+    tmp.width = W; tmp.height = W;
     await drawFace(tmp.getContext('2d'), overrides ? { ...state, ...overrides } : state);
     ctx.drawImage(tmp, 0, 0);
 
-    // 몸통: 기다란 둥근 막대 하나 (팔 없음)
+    // 몸통: 얼굴 정사각형 아래에서 시작 (얼굴 PNG 하단 여백과 살짝 겹침)
     const clothHex = (CLOTHING_COLORS.find(c=>c.id===state.clothingColor)||CLOTHING_COLORS[0]).hex;
     const cx  = W / 2;
     const bw  = W * 0.28;       // 막대 폭
-    const bh  = H * 0.36;       // 막대 높이
     const br  = bw / 2;         // 끝 반원
     const bx  = cx - bw / 2;
-    const by  = faceH + H * 0.01;
+    const by  = W * 0.88;       // 얼굴 정사각형 하단쯤(턱 아래)에서 몸통 시작
+    const bh  = H - by;         // 캔버스 바닥까지
 
     ctx.fillStyle = clothHex;
     ctx.beginPath();
