@@ -732,17 +732,11 @@ document.querySelectorAll('.outdoor-place').forEach(btn => {
       restaurant: 'restaurant',
       mart: 'mart',
       movie: 'movie',
-	park: 'park', // dept: 'dept', // 만들면 주석 해제
+      park: 'park',
+      street: 'street',   // dept: 'dept', // 만들면 주석 해제
     };
 
     let ev = eventMap[place];
-
-    // 거리: 누를 때마다 street1~N 중 랜덤
-    if (place === 'street') {
-      const STREET_COUNT = 3;           // 거리 이벤트 개수 (street1.js ~ street3.js)
-      const n = Math.floor(Math.random() * STREET_COUNT) + 1;
-      ev = 'street' + n;
-    }
 
     if (!ev) return;                       // 아직 안 만든 장소는 무시
     doWipeIn(() => {
