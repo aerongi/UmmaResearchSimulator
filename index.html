@@ -28,6 +28,23 @@
       pointer-events: none;
     }
 
+    /* ── 카피라이트 (우측 하단, 클릭 후 등장) ── */
+    #copyright {
+      position: fixed;
+      right: 16px;
+      bottom: 14px;
+      z-index: 20;
+      color: rgba(255, 255, 255, 0.85);
+      font-size: 13px;
+      font-weight: 400;
+      letter-spacing: 0.5px;
+      text-shadow: 0 1px 4px rgba(160, 0, 80, 0.4);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.8s;
+    }
+    #copyright.shown { opacity: 1; }
+
     /* ── 콘텐츠 래퍼 ── */
     #content {
       position: relative;
@@ -113,6 +130,8 @@
 
 <div id="bg"></div>
 <canvas id="sparkle-canvas"></canvas>
+
+<div id="copyright">© 팀 정해주세요</div>
 
 <div id="content">
   <img id="logo" src="assets/title-logo.png" alt="두근두근 엄마연구 시뮬레이터">
@@ -295,6 +314,7 @@ startBtn.addEventListener('click', () => {
     bgm.play();
     gate.classList.add('hidden');
     setTimeout(() => gate.remove(), 400);
+    document.getElementById('copyright').classList.add('shown');
   }, { once: true });
 </script>
 
